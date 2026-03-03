@@ -389,12 +389,12 @@ export default function App() {
               t={t}
             />
 
-            <div className="lg:col-span-3 space-y-6">
+            <div className="lg:col-span-3 space-y-6 print-container">
               <ActiveFiltersBadge naves={selectedNaves} vars={selectedVariedades} formats={selectedFormatos} t={t} />
 
               {activeTab !== 'ranking' && <TopKpis winnerRMB={winnerRMB} winnerUSD={winnerUSD} unitPriceLabel={unitPriceLabel} t={t} />}
 
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 print-box">
                 <div className="flex space-x-1 bg-slate-100 p-1 rounded-xl mb-6 overflow-x-auto no-print">
                   {[
                     { id: 'ranking', label: t('tab_ranking') },
