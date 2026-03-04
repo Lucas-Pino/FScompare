@@ -48,8 +48,8 @@ const RankingTab = ({ filteredData, marketDict, priceMultiplier, volDivider, uni
 
   return (
     <div className="space-y-6">
-      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-6">
+      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm print:border-none print:p-0">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-6 print:mb-2">
           <h3 className="text-lg font-bold text-slate-800 flex items-center">
             <Medal className="w-5 h-5 mr-2 text-amber-500" /> {t('tab_ranking')}
           </h3>
@@ -72,7 +72,7 @@ const RankingTab = ({ filteredData, marketDict, priceMultiplier, volDivider, uni
         )}
 
         {/* PODIUM */}
-        <div className="flex flex-col md:flex-row justify-center items-end gap-4 mt-12 mb-16 h-48 px-4">
+        <div className="flex flex-col md:flex-row justify-center items-end gap-4 mt-12 mb-16 h-48 px-4 print:mt-4 print:mb-8">
           {/* Segundo Lugar */}
           {top3[1] && (
             <div className="flex-1 max-w-[200px] flex flex-col items-center group relative">

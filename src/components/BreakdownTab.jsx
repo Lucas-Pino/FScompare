@@ -61,7 +61,7 @@ const BreakdownTab = ({ client, setClient, filteredData, marketDict, priceMultip
   const avgUsd = stats.pricedKilos > 0 ? (stats.fobUSD / stats.pricedKilos) * priceMultiplier : 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 print:space-y-4">
       <div className="flex items-center space-x-4 bg-slate-50 p-4 rounded-2xl border border-slate-200 shadow-inner no-print">
         <label className="text-xs font-black text-slate-500 uppercase flex items-center">
           <User className="w-4 h-4 mr-2" /> {t('breakdown_analyze')}
@@ -80,7 +80,7 @@ const BreakdownTab = ({ client, setClient, filteredData, marketDict, priceMultip
         </div>
       )}
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 print:grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
           <p className="text-xs font-bold text-slate-400 uppercase mb-1">{t('vol_exp')}</p>
           <p className="text-xl font-black text-slate-800">{formatNumber(displayVol)} <span className="text-sm font-normal">{unitVolLabel}</span></p>
@@ -103,9 +103,9 @@ const BreakdownTab = ({ client, setClient, filteredData, marketDict, priceMultip
         </div>
       </div>
 
-      <div className="bg-slate-50 rounded-2xl border border-slate-200 shadow-sm p-6">
+      <div className="bg-slate-50 rounded-2xl border border-slate-200 shadow-sm p-6 print:p-2">
         <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 border-b pb-2">{t('cost_breakdown')}</h4>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 print:grid-cols-4 gap-4">
           {[
             { label: t('comissions'), val: stats.comis, color: 'text-violet-600' },
             { label: t('freight'), val: stats.flete, color: 'text-blue-600' },
@@ -125,7 +125,7 @@ const BreakdownTab = ({ client, setClient, filteredData, marketDict, priceMultip
         <div className="p-4 bg-slate-800 text-white flex justify-between items-center">
           <h4 className="text-sm font-bold uppercase tracking-wider">{t('perf_vs_market')}</h4>
         </div>
-        <div className="overflow-x-auto max-h-[500px]">
+        <div className="overflow-x-auto max-h-[500px] print:max-h-none">
           <table className="min-w-full text-sm text-left text-slate-600">
             <thead className="text-xs text-slate-500 uppercase bg-slate-50 sticky top-0 z-10 shadow-sm">
               <tr>
@@ -150,8 +150,8 @@ const BreakdownTab = ({ client, setClient, filteredData, marketDict, priceMultip
 
                 return (
                   <tr key={i} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-4 py-3 font-semibold text-slate-800">{c.id}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 font-semibold text-slate-800 whitespace-nowrap">{c.id}</td>
+                    <td className="px-4 py-3 whitespace-nowrap">
                       <div className="font-medium text-slate-700">{c.Nave}</div>
                       <div className="text-xs text-slate-400">{c.Fecha}</div>
                     </td>
@@ -165,13 +165,13 @@ const BreakdownTab = ({ client, setClient, filteredData, marketDict, priceMultip
                     <td className="px-4 py-3 text-xs text-slate-500 max-w-[200px] truncate" title={Array.from(c.productores).join(', ')}>
                       {Array.from(c.productores).join(', ')}
                     </td>
-                    <td className="px-4 py-3 text-right font-bold text-amber-600">
+                    <td className="px-4 py-3 text-right font-bold text-amber-600 whitespace-nowrap">
                       {hasPrice ? formatRMB(cAvgRmb) : <span className="text-xs text-slate-400 font-medium">{t('to_be_priced')}</span>}
                     </td>
-                    <td className="px-4 py-3 text-right font-medium text-slate-500">
+                    <td className="px-4 py-3 text-right font-medium text-slate-500 whitespace-nowrap">
                       {hasPrice ? formatRMB(cMktRmb) : '-'}
                     </td>
-                    <td className="px-4 py-3 text-right font-bold">
+                    <td className="px-4 py-3 text-right font-bold whitespace-nowrap">
                       {hasPrice ? (
                         <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs ${isPositive ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
                           {isPositive ? <ArrowUpRight className="w-3 h-3 mr-1" /> : <ArrowDownRight className="w-3 h-3 mr-1" />}
