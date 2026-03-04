@@ -10,16 +10,6 @@ const PrintStyles = () => (
       .bg-slate-50, .bg-blue-50, .bg-amber-50 { background-color: #fff !important; }
       .recharts-wrapper { page-break-inside: avoid; max-width: 100% !important; }
       .overflow-x-auto { overflow: visible !important; max-height: none !important; }
-
-      /* Ensure main content takes full width when sidebar is hidden */
-      .grid { display: block !important; }
-      .print-container { width: 100% !important; margin: 0 !important; padding: 0 !important; }
-
-      /* Avoid breaking charts and tables */
-      .print-box { page-break-inside: avoid; margin-bottom: 20px; }
-      table { page-break-inside: auto; }
-      tr { page-break-inside: avoid; page-break-after: auto; }
-      thead { display: table-header-group; }
     }
   `}</style>
 );

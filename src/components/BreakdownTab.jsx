@@ -80,70 +80,42 @@ const BreakdownTab = ({ client, setClient, filteredData, marketDict, priceMultip
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Volumen */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center relative overflow-hidden">
-          <div className="absolute -right-2 -top-2 opacity-5"><Package className="w-20 h-20 text-blue-500" /></div>
-          <div className="bg-blue-50 p-3 rounded-xl mr-4"><Package className="w-6 h-6 text-blue-600" /></div>
-          <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('vol_exp')}</p>
-            <p className="text-xl font-black text-slate-800">{formatNumber(displayVol)} <span className="text-xs font-normal text-slate-500">{unitVolLabel}</span></p>
-            <p className="text-[10px] font-medium text-slate-400">{formatNumber(stats.cajas)} {t('phys_boxes')}</p>
-          </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
+          <p className="text-xs font-bold text-slate-400 uppercase mb-1">{t('vol_exp')}</p>
+          <p className="text-xl font-black text-slate-800">{formatNumber(displayVol)} <span className="text-sm font-normal">{unitVolLabel}</span></p>
+          <p className="text-xs text-slate-500">{formatNumber(stats.cajas)} {t('phys_boxes')}</p>
         </div>
-
-        {/* Venta Bruta */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center relative overflow-hidden">
-          <div className="absolute -right-2 -top-2 opacity-5"><TrendingUp className="w-20 h-20 text-amber-500" /></div>
-          <div className="bg-amber-50 p-3 rounded-xl mr-4"><TrendingUp className="w-6 h-6 text-amber-600" /></div>
-          <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('gross_sale_total')}</p>
-            <p className="text-xl font-black text-amber-600">{formatRMB(stats.vtaRMB)}</p>
-            <p className="text-[10px] font-medium text-slate-400">{t('prom')}: {formatRMB(avgRmb)}/{unitPriceLabel}</p>
-          </div>
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
+          <p className="text-xs font-bold text-slate-400 uppercase mb-1">{t('gross_sale_total')}</p>
+          <p className="text-xl font-black text-amber-600">{formatRMB(stats.vtaRMB)}</p>
+          <p className="text-xs text-slate-500">{t('prom')}: {formatRMB(avgRmb)}/{unitPriceLabel}</p>
         </div>
-
-        {/* Costos */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center relative overflow-hidden">
-          <div className="absolute -right-2 -top-2 opacity-5"><TrendingDown className="w-20 h-20 text-red-500" /></div>
-          <div className="bg-red-50 p-3 rounded-xl mr-4"><TrendingDown className="w-6 h-6 text-red-600" /></div>
-          <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('dest_cost')}</p>
-            <p className="text-xl font-black text-red-500">-{formatRMB(costTotal)}</p>
-            <p className="text-[10px] font-medium text-slate-400">{stats.vtaRMB > 0 ? formatPercent(costTotal/stats.vtaRMB) : '0%'} {t('pct_sale')}</p>
-          </div>
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
+          <p className="text-xs font-bold text-slate-400 uppercase mb-1">{t('dest_cost')}</p>
+          <p className="text-xl font-black text-red-500">-{formatRMB(costTotal)}</p>
+          <p className="text-xs text-slate-500">{stats.vtaRMB > 0 ? formatPercent(costTotal/stats.vtaRMB) : '0%'} {t('pct_sale')}</p>
         </div>
-
-        {/* FOB Neto */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center relative overflow-hidden">
-          <div className="absolute -right-2 -top-2 opacity-5"><DollarSign className="w-20 h-20 text-emerald-500" /></div>
-          <div className="bg-emerald-50 p-3 rounded-xl mr-4"><DollarSign className="w-6 h-6 text-emerald-600" /></div>
-          <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('fob_gen')}</p>
-            <p className="text-xl font-black text-emerald-600">{formatUSD(stats.fobUSD)}</p>
-            <p className="text-[10px] font-medium text-slate-400">{t('prom')}: {formatUSD(avgUsd)}/{unitPriceLabel}</p>
-          </div>
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
+          <p className="text-xs font-bold text-slate-400 uppercase mb-1">{t('fob_gen')}</p>
+          <p className="text-xl font-black text-emerald-600">{formatUSD(stats.fobUSD)}</p>
+          <p className="text-xs text-slate-500">{t('prom')}: {formatUSD(avgUsd)}/{unitPriceLabel}</p>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 overflow-hidden relative">
-        <div className="absolute top-0 right-0 p-8 opacity-5"><PieChart className="w-32 h-32 text-slate-400" /></div>
-        <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-6 flex items-center">
-          <PieChart className="w-4 h-4 mr-2" /> {t('cost_breakdown')}
-        </h4>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="bg-slate-50 rounded-2xl border border-slate-200 shadow-sm p-6">
+        <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 border-b pb-2">{t('cost_breakdown')}</h4>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: t('comissions'), val: stats.comis, color: 'text-violet-600', bg: 'bg-violet-50' },
-            { label: t('freight'), val: stats.flete, color: 'text-blue-600', bg: 'bg-blue-50' },
-            { label: t('vat'), val: stats.vat, color: 'text-orange-600', bg: 'bg-orange-50' },
-            { label: t('others'), val: stats.otros, color: 'text-slate-600', bg: 'bg-slate-50' }
+            { label: t('comissions'), val: stats.comis, color: 'text-violet-600' },
+            { label: t('freight'), val: stats.flete, color: 'text-blue-600' },
+            { label: t('vat'), val: stats.vat, color: 'text-orange-600' },
+            { label: t('others'), val: stats.otros, color: 'text-slate-600' }
           ].map((c, i) => (
-            <div key={i} className="p-4 rounded-xl border border-slate-50 bg-slate-50/50 hover:bg-white hover:shadow-md transition-all duration-300">
-              <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">{c.label}</span>
-              <span className={`text-lg font-black ${c.color} block`}>{formatRMB(c.val)}</span>
-              <span className="text-[10px] font-medium text-slate-500">
-                {stats.vtaRMB > 0 ? formatPercent(c.val/stats.vtaRMB) : '0%'} {t('prom')}
-              </span>
+            <div key={i} className="bg-white p-3 rounded-lg shadow-sm border border-slate-100 flex flex-col items-center">
+              <span className="text-xs font-bold text-slate-400 uppercase">{c.label}</span>
+              <span className={`text-lg font-black ${c.color}`}>{formatRMB(c.val)}</span>
+              <span className="text-xs text-slate-500">{stats.vtaRMB > 0 ? formatPercent(c.val/stats.vtaRMB) : '0%'} {t('prom')}</span>
             </div>
           ))}
         </div>

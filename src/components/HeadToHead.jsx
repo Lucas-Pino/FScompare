@@ -79,9 +79,9 @@ const HeadToHead = ({ clientA, setClientA, clientB, setClientB, chartDataH2H, st
         </div>
       </div>
 
-      <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 print:bg-white print:border-slate-100">
+      <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200">
         <h4 className="font-bold text-slate-800 mb-4 text-center text-sm uppercase tracking-wider">{t('h2h_chart')}</h4>
-        <div className="h-[300px] w-full print:h-[400px]">
+        <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartDataH2H} margin={{ top: 10, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
@@ -103,9 +103,9 @@ const HeadToHead = ({ clientA, setClientA, clientB, setClientB, chartDataH2H, st
         </div>
       </div>
 
-      <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 print:bg-white print:border-slate-100">
+      <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200">
         <h4 className="font-bold text-slate-800 mb-4 text-center text-sm uppercase tracking-wider">{t('h2h_vol_chart')}</h4>
-        <div className="h-[300px] w-full print:h-[400px]">
+        <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartDataH2H} margin={{ top: 10, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />

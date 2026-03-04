@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Package } from 'lucide-react';
 import { VALID_CLIENTS, COLORS, DICT } from './utils/constants';
-import { parseNum, parseCSV } from './utils/formatters';
+import { parseNum, parseCSV, parseCost } from './utils/formatters';
 
 import UploadScreen from './components/UploadScreen';
 import Header from './components/layout/Header';
@@ -153,40 +153,20 @@ export default function App() {
 
             const isPriced = vta !== 0 || usd !== 0;
 
-            // --- HEURISTIC COST CALCULATION ---
-            let comisTotal = 0, fleteTotal = 0, vatTotal = 0, otrosTotal = 0;
+            // --- DETECCION DE COSTOS (TOTALES VS UNITARIOS/PERCENT) ---
+            const comisTotal = idxTTComis !== -1 && parseNum(row[idxTTComis]) > 100
+              ? parseNum(row[idxTTComis])
+              : (idxComis !== -1 ? parseCost(row[idxComis], vta, cajas, 'comis') : 0);
 
-            // Comisión (Heurística: si es < 1, es porcentaje decimal; si es entre 1 y 20, es porcentaje entero; > 20 es total)
-            if (idxTTComis !== -1 && parseNum(row[idxTTComis]) > 100) {
-              comisTotal = parseNum(row[idxTTComis]);
-            } else if (idxComis !== -1) {
-              const cVal = parseNum(row[idxComis]);
-              if (cVal > 0 && cVal <= 1) comisTotal = vta * cVal;
-              else if (cVal > 1 && cVal <= 25) comisTotal = vta * (cVal / 100);
-              else comisTotal = cVal * cajas;
-            }
+            const fleteTotal = idxTTFlete !== -1 && parseNum(row[idxTTFlete]) > 500
+              ? parseNum(row[idxTTFlete])
+              : (idxFlete !== -1 ? parseCost(row[idxFlete], vta, cajas, 'flete') : 0);
 
-            // VAT (Heurística similar: suele ser 9% o 13%)
-            if (idxTTVat !== -1 && parseNum(row[idxTTVat]) > 100) {
-              vatTotal = parseNum(row[idxTTVat]);
-            } else if (idxVat !== -1) {
-              const vVal = parseNum(row[idxVat]);
-              if (vVal > 0 && vVal <= 1) vatTotal = vta * vVal;
-              else if (vVal > 1 && vVal <= 20) vatTotal = vta * (vVal / 100);
-              else vatTotal = vVal * cajas;
-            }
+            const vatTotal = idxTTVat !== -1 && parseNum(row[idxTTVat]) > 100
+              ? parseNum(row[idxTTVat])
+              : (idxVat !== -1 ? parseCost(row[idxVat], vta, cajas, 'vat') : 0);
 
-            // Flete Interno (Heurística: suele ser por caja 1.5 - 5 RMB)
-            if (idxTTFlete !== -1 && parseNum(row[idxTTFlete]) > 500) {
-              fleteTotal = parseNum(row[idxTTFlete]);
-            } else if (idxFlete !== -1) {
-              const fVal = parseNum(row[idxFlete]);
-              if (fVal > 0 && fVal < 50) fleteTotal = fVal * cajas;
-              else fleteTotal = fVal;
-            }
-
-            // Otros Costos
-            otrosTotal = idxTTOtros !== -1 ? parseNum(row[idxTTOtros]) : (idxOtros !== -1 ? parseNum(row[idxOtros]) * cajas : 0);
+            const otrosTotal = idxTTOtros !== -1 ? parseNum(row[idxTTOtros]) : (idxOtros !== -1 ? parseNum(row[idxOtros]) * cajas : 0);
 
             parsedData.push({
               Nave: String(row[idxNave] || 'Desconocida').trim(),
@@ -418,12 +398,12 @@ export default function App() {
               t={t}
             />
 
-            <div className="lg:col-span-3 space-y-6 print-container">
+            <div className="lg:col-span-3 space-y-6">
               <ActiveFiltersBadge naves={selectedNaves} vars={selectedVariedades} formats={selectedFormatos} t={t} />
 
               {activeTab !== 'ranking' && <TopKpis winnerRMB={winnerRMB} winnerUSD={winnerUSD} unitPriceLabel={unitPriceLabel} t={t} />}
 
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 print-box">
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                 <div className="flex space-x-1 bg-slate-100 p-1 rounded-xl mb-6 overflow-x-auto no-print">
                   {[
                     { id: 'ranking', label: t('tab_ranking') },

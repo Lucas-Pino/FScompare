@@ -28,6 +28,28 @@ export const parseNum = (val) => {
   return isNegative ? -num : num;
 };
 
+export const parseCost = (val, vta, cajas, type = 'comis') => {
+  const num = parseNum(val);
+  if (num === 0) return 0;
+
+  // Heurística: Distinguir entre Porcentaje, Unitario o Total
+  if (type === 'comis' || type === 'vat') {
+    const threshold = type === 'comis' ? 25 : 20;
+    if (num > 100) return num; // Probablemente es un TT (Total)
+    if (num > 0 && num <= 1) return vta * num; // Porcentaje decimal (e.g. 0.08)
+    if (num > 1 && num <= threshold) return vta * (num / 100); // Porcentaje entero (e.g. 8)
+    return num * cajas; // Costo unitario
+  }
+
+  if (type === 'flete') {
+    if (num > 500) return num; // Probablemente TT
+    if (num > 0 && num < 50) return num * cajas; // Costo unitario
+    return num;
+  }
+
+  return num;
+};
+
 export const parseCSV = (text) => {
   const delimiter = text.includes(';') && text.split(';').length > text.split(',').length ? ';' : ',';
   const lines = text.split('\n');
