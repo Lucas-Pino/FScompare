@@ -153,11 +153,40 @@ export default function App() {
 
             const isPriced = vta !== 0 || usd !== 0;
 
-            // Si hay columna TT (Total) la usa, sino, usa la unitaria y multiplica por las cajas.
-            const comisTotal = idxTTComis !== -1 ? parseNum(row[idxTTComis]) : (idxComis !== -1 ? parseNum(row[idxComis]) * cajas : 0);
-            const fleteTotal = idxTTFlete !== -1 ? parseNum(row[idxTTFlete]) : (idxFlete !== -1 ? parseNum(row[idxFlete]) * cajas : 0);
-            const vatTotal = idxTTVat !== -1 ? parseNum(row[idxTTVat]) : (idxVat !== -1 ? parseNum(row[idxVat]) * cajas : 0);
-            const otrosTotal = idxTTOtros !== -1 ? parseNum(row[idxTTOtros]) : (idxOtros !== -1 ? parseNum(row[idxOtros]) * cajas : 0);
+            // --- HEURISTIC COST CALCULATION ---
+            let comisTotal = 0, fleteTotal = 0, vatTotal = 0, otrosTotal = 0;
+
+            // Comisión (Heurística: si es < 1, es porcentaje decimal; si es entre 1 y 20, es porcentaje entero; > 20 es total)
+            if (idxTTComis !== -1 && parseNum(row[idxTTComis]) > 100) {
+              comisTotal = parseNum(row[idxTTComis]);
+            } else if (idxComis !== -1) {
+              const cVal = parseNum(row[idxComis]);
+              if (cVal > 0 && cVal <= 1) comisTotal = vta * cVal;
+              else if (cVal > 1 && cVal <= 25) comisTotal = vta * (cVal / 100);
+              else comisTotal = cVal * cajas;
+            }
+
+            // VAT (Heurística similar: suele ser 9% o 13%)
+            if (idxTTVat !== -1 && parseNum(row[idxTTVat]) > 100) {
+              vatTotal = parseNum(row[idxTTVat]);
+            } else if (idxVat !== -1) {
+              const vVal = parseNum(row[idxVat]);
+              if (vVal > 0 && vVal <= 1) vatTotal = vta * vVal;
+              else if (vVal > 1 && vVal <= 20) vatTotal = vta * (vVal / 100);
+              else vatTotal = vVal * cajas;
+            }
+
+            // Flete Interno (Heurística: suele ser por caja 1.5 - 5 RMB)
+            if (idxTTFlete !== -1 && parseNum(row[idxTTFlete]) > 500) {
+              fleteTotal = parseNum(row[idxTTFlete]);
+            } else if (idxFlete !== -1) {
+              const fVal = parseNum(row[idxFlete]);
+              if (fVal > 0 && fVal < 50) fleteTotal = fVal * cajas;
+              else fleteTotal = fVal;
+            }
+
+            // Otros Costos
+            otrosTotal = idxTTOtros !== -1 ? parseNum(row[idxTTOtros]) : (idxOtros !== -1 ? parseNum(row[idxOtros]) * cajas : 0);
 
             parsedData.push({
               Nave: String(row[idxNave] || 'Desconocida').trim(),

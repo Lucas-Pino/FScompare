@@ -10,7 +10,7 @@ export const parseNum = (val) => {
   if (str === '') return 0;
 
   const isNegative = (str.startsWith('(') && str.endsWith(')')) || str.startsWith('-');
-  let cleaned = str.replace(/[()-]/g, '').trim();
+  let cleaned = str.replace(/[()\- %]/g, '').trim();
 
   const commas = (cleaned.match(/,/g) || []).length;
   const dots = (cleaned.match(/\./g) || []).length;

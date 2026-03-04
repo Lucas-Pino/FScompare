@@ -17,6 +17,7 @@ export default function ChartVolume({ data, unitVolLabel, t }) {
                             outerRadius={110}
                             paddingAngle={3}
                             dataKey="value"
+                            isAnimationActive={false}
                             labelLine={{ stroke: '#cbd5e1', strokeWidth: 1 }}
                             label={(props) => {
                                 const { x, y, name, varieties, textAnchor, fill, percent } = props;

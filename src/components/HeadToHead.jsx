@@ -79,9 +79,9 @@ const HeadToHead = ({ clientA, setClientA, clientB, setClientB, chartDataH2H, st
         </div>
       </div>
 
-      <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200">
+      <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 print:bg-white print:border-slate-100">
         <h4 className="font-bold text-slate-800 mb-4 text-center text-sm uppercase tracking-wider">{t('h2h_chart')}</h4>
-        <div className="h-[300px] w-full">
+        <div className="h-[300px] w-full print:h-[400px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartDataH2H} margin={{ top: 10, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
@@ -96,16 +96,16 @@ const HeadToHead = ({ clientA, setClientA, clientB, setClientB, chartDataH2H, st
                 contentStyle={{borderRadius: '8px', border: 'none'}}
               />
               <Legend wrapperStyle={{ paddingTop: '10px' }} iconType="circle" />
-              <Bar dataKey={clientA} fill={COLORS[clientA]} radius={[4, 4, 0, 0]} maxBarSize={50} />
-              <Bar dataKey={clientB} fill={COLORS[clientB]} radius={[4, 4, 0, 0]} maxBarSize={50} />
+              <Bar dataKey={clientA} fill={COLORS[clientA]} radius={[4, 4, 0, 0]} maxBarSize={50} isAnimationActive={false} />
+              <Bar dataKey={clientB} fill={COLORS[clientB]} radius={[4, 4, 0, 0]} maxBarSize={50} isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200">
+      <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 print:bg-white print:border-slate-100">
         <h4 className="font-bold text-slate-800 mb-4 text-center text-sm uppercase tracking-wider">{t('h2h_vol_chart')}</h4>
-        <div className="h-[300px] w-full">
+        <div className="h-[300px] w-full print:h-[400px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartDataH2H} margin={{ top: 10, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
@@ -125,8 +125,8 @@ const HeadToHead = ({ clientA, setClientA, clientB, setClientB, chartDataH2H, st
                 iconType="circle"
                 formatter={(value) => String(value).replace('_vol', '')}
               />
-              <Bar dataKey={`${clientA}_vol`} fill={COLORS[clientA]} radius={[4, 4, 0, 0]} maxBarSize={50} />
-              <Bar dataKey={`${clientB}_vol`} fill={COLORS[clientB]} radius={[4, 4, 0, 0]} maxBarSize={50} />
+              <Bar dataKey={`${clientA}_vol`} fill={COLORS[clientA]} radius={[4, 4, 0, 0]} maxBarSize={50} isAnimationActive={false} />
+              <Bar dataKey={`${clientB}_vol`} fill={COLORS[clientB]} radius={[4, 4, 0, 0]} maxBarSize={50} isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
         </div>
