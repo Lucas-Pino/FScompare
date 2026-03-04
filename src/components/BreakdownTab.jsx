@@ -7,12 +7,13 @@ const BreakdownTab = ({ client, setClient, filteredData, marketDict, priceMultip
   const clientData = useMemo(() => filteredData.filter(d => d.Cliente === client), [filteredData, client]);
 
   const stats = useMemo(() => {
-    const s = { cajas: 0, kilos: 0, pricedKilos: 0, pricedCajas: 0, vtaRMB: 0, fobUSD: 0, comis: 0, flete: 0, vat: 0, otros: 0 };
+    const s = { cajas: 0, kilos: 0, pricedKilos: 0, pricedCajas: 0, vtaRMB: 0, fobUSD: 0, fobRMB: 0, comis: 0, flete: 0, vat: 0, otros: 0 };
     clientData.forEach(d => {
       s.cajas += d.Cajas; s.kilos += d.Kilos;
       s.pricedCajas += d.pricedCajas; s.pricedKilos += d.pricedKilos;
       s.vtaRMB += d.RMB; s.fobUSD += d.USD;
       s.comis += d.Comis; s.flete += d.Flete; s.vat += d.Vat; s.otros += d.Otros;
+      s.fobRMB += (d.FinalRMB || (d.RMB - (d.Comis + d.Flete + d.Vat + d.Otros)));
     });
     return s;
   }, [clientData]);
@@ -59,6 +60,7 @@ const BreakdownTab = ({ client, setClient, filteredData, marketDict, priceMultip
   const displayVol = stats.kilos / volDivider;
   const avgRmb = stats.pricedKilos > 0 ? (stats.vtaRMB / stats.pricedKilos) * priceMultiplier : 0;
   const avgUsd = stats.pricedKilos > 0 ? (stats.fobUSD / stats.pricedKilos) * priceMultiplier : 0;
+  const avgRmbFob = stats.pricedKilos > 0 ? (stats.fobRMB / stats.pricedKilos) * priceMultiplier : 0;
 
   return (
     <div className="space-y-6 print:space-y-4">
@@ -99,7 +101,8 @@ const BreakdownTab = ({ client, setClient, filteredData, marketDict, priceMultip
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
           <p className="text-xs font-bold text-slate-400 uppercase mb-1">{t('fob_gen')}</p>
           <p className="text-xl font-black text-emerald-600">{formatUSD(stats.fobUSD)}</p>
-          <p className="text-xs text-slate-500">{t('prom')}: {formatUSD(avgUsd)}/{unitPriceLabel}</p>
+          <p className="text-xs font-bold text-slate-400">{formatRMB(stats.fobRMB)}</p>
+          <p className="text-[10px] text-slate-400 mt-1">{t('prom')}: {formatUSD(avgUsd)}/{unitPriceLabel} ({formatRMB(avgRmbFob)})</p>
         </div>
       </div>
 
