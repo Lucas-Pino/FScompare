@@ -12,7 +12,7 @@ const FilterSidebar = ({
   equivWeight, setEquivWeight,
   totalCajas, totalVol, unitVolLabel, t
 }) => (
-  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-6">
+  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-6 no-print">
     <h3 className="font-semibold text-slate-800 border-b pb-2 flex items-center">{t('filters')}</h3>
     <div>
       <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center">

@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Package } from 'lucide-react';
 import { VALID_CLIENTS, COLORS, DICT } from './utils/constants';
-import { parseNum, parseCSV } from './utils/formatters';
+import { parseNum, parseCSV, parseCost } from './utils/formatters';
 
 import UploadScreen from './components/UploadScreen';
 import Header from './components/layout/Header';
@@ -112,28 +112,34 @@ export default function App() {
         const idxCalibre = cleanHeaders.indexOf('calibre_rot');
         const idxCliente = cleanHeaders.indexOf('cliente real');
         const idxCajas = cleanHeaders.indexOf('cajas');
-        const idxVta = cleanHeaders.indexOf('total vta');
-        const idxUSD = cleanHeaders.indexOf('final usd');
+        const idxVta = cleanHeaders.findIndex(h => h === 'total vta' || h === 'total_vta' || h === 'total vta rmb');
+        const idxPVta = cleanHeaders.findIndex(h => h === 'p. vta rmb' || h === 'p_vta_rmb' || h === 'precio vta rmb');
+        const idxUSD = cleanHeaders.findIndex(h => h === 'final usd' || h === 'final_usd' || h === 'usd fob');
+        const idxFinalRMB = cleanHeaders.findIndex(h => h === 'final rmb' || h === 'final_rmb' || h === 'fob rmb');
 
         const idxPesoNeto = cleanHeaders.findIndex(h => h.includes('peso neto') || h.includes('peso_neto'));
         const idxContenedor = cleanHeaders.findIndex(h => h.includes('contenedor'));
         const idxProductor = cleanHeaders.findIndex(h => h.includes('productor'));
         const idxFecha = cleanHeaders.findIndex(h => h.includes('fecha_despacho') || h.includes('fecha_emb') || h.includes('embarque'));
 
-        // --- NUEVA LÓGICA DE DETECCIÓN DE COSTOS (TOTALES VS UNITARIOS) ---
-        const idxTTComis = cleanHeaders.findIndex(h => h.includes('tt comis') || h.includes('total comis'));
-        const idxComis = cleanHeaders.findIndex(h => h === 'comis imp' || h === 'comision' || h === 'comis' || h === 'comis.');
+        // --- LÓGICA DE DETECCIÓN DE COSTOS (TOTALES VS UNITARIOS) ---
+        // Comisiones: Priorizar Comis Imp (que según el usuario es el total)
+        const idxTTComis = cleanHeaders.findIndex(h => h === 'comis imp' || h === 'tt comis' || h === 'total comis');
+        const idxComis = cleanHeaders.findIndex(h => h === 'comision' || h === 'comis' || h === 'comis.');
 
-        const idxTTFlete = cleanHeaders.findIndex(h => h.includes('tt freight') || h.includes('tt flete') || h.includes('total flete') || h.includes('total freight'));
-        const idxFlete = cleanHeaders.findIndex(h => h === 'freight' || h === 'flete' || h === 'flete interno');
+        // Flete: Priorizar TT FC
+        const idxTTFlete = cleanHeaders.findIndex(h => h === 'tt fc' || h === 'tt freight' || h === 'tt flete' || h === 'total flete' || h === 'total freight');
+        const idxFlete = cleanHeaders.findIndex(h => h === 'freight cost' || h === 'freight' || h === 'flete' || h === 'flete interno');
 
-        const idxTTVat = cleanHeaders.findIndex(h => h.includes('tt vat') || h.includes('tt impuesto') || h.includes('total vat'));
+        // VAT: Priorizar TT VAT
+        const idxTTVat = cleanHeaders.findIndex(h => h === 'tt vat' || h === 'tt impuesto' || h === 'total vat');
         const idxVat = cleanHeaders.findIndex(h => h === 'vat' || h === 'impuesto');
 
-        const idxTTOtros = cleanHeaders.findIndex(h => h.includes('tt others') || h.includes('tt otros') || h.includes('total otros'));
-        const idxOtros = cleanHeaders.findIndex(h => h.includes('others cost') || h.includes('otros cost') || h === 'otros' || h === 'others');
+        // Otros: Priorizar TT OC
+        const idxTTOtros = cleanHeaders.findIndex(h => h === 'tt oc' || h === 'tt others' || h === 'tt otros' || h === 'total otros');
+        const idxOtros = cleanHeaders.findIndex(h => h === 'other cost' || h === 'others cost' || h === 'otros' || h === 'others');
 
-        if (idxCajas === -1 || idxVta === -1 || idxUSD === -1) {
+        if (idxCajas === -1 || (idxVta === -1 && idxFinalRMB === -1)) {
           throw new Error("Faltan columnas vitales ('Cajas', 'Total vta', o 'Final USD').");
         }
 
@@ -148,13 +154,18 @@ export default function App() {
             const pesoNetoRaw = idxPesoNeto !== -1 ? parseNum(row[idxPesoNeto]) : 5;
             const pesoNeto = pesoNetoRaw > 0 ? pesoNetoRaw : 5;
 
-            const vta = parseNum(row[idxVta]);
+            const vtaRaw = parseNum(row[idxVta]);
+            const pVta = idxPVta !== -1 ? parseNum(row[idxPVta]) : 0;
+            const vta = vtaRaw !== 0 ? vtaRaw : (pVta !== 0 ? pVta * cajas : 0);
+
             const usd = parseNum(row[idxUSD]);
+            const finalRMB = idxFinalRMB !== -1 ? parseNum(row[idxFinalRMB]) : 0;
 
-            const isPriced = vta !== 0 || usd !== 0;
+            const isPriced = vta !== 0 || usd !== 0 || finalRMB !== 0;
 
-            // Si hay columna TT (Total) la usa, sino, usa la unitaria y multiplica por las cajas.
-            const comisTotal = idxTTComis !== -1 ? parseNum(row[idxTTComis]) : (idxComis !== -1 ? parseNum(row[idxComis]) * cajas : 0);
+            // --- DETECCION DE COSTOS (TOTALES VS UNITARIOS/PERCENT) ---
+            // Prioridad absoluta a columnas de TOTAL (TT)
+            const comisTotal = idxTTComis !== -1 ? parseNum(row[idxTTComis]) : (idxComis !== -1 ? parseCost(row[idxComis], vta, cajas, 'comis') : 0);
             const fleteTotal = idxTTFlete !== -1 ? parseNum(row[idxTTFlete]) : (idxFlete !== -1 ? parseNum(row[idxFlete]) * cajas : 0);
             const vatTotal = idxTTVat !== -1 ? parseNum(row[idxTTVat]) : (idxVat !== -1 ? parseNum(row[idxVat]) * cajas : 0);
             const otrosTotal = idxTTOtros !== -1 ? parseNum(row[idxTTOtros]) : (idxOtros !== -1 ? parseNum(row[idxOtros]) * cajas : 0);
@@ -172,6 +183,7 @@ export default function App() {
               pricedKilos: isPriced ? (cajas * pesoNeto) : 0,
               RMB: vta,
               USD: usd,
+              FinalRMB: finalRMB,
               Contenedor: idxContenedor !== -1 ? String(row[idxContenedor] || 'S/N').trim() : 'S/N',
               Productor: idxProductor !== -1 ? String(row[idxProductor] || 'N/A').trim() : 'N/A',
               Fecha: idxFecha !== -1 ? String(row[idxFecha] || '').trim().split(' ')[0] : '',
@@ -375,7 +387,16 @@ export default function App() {
       <PrintStyles />
       <div className="min-h-screen bg-slate-50 p-6 font-sans text-slate-800 relative">
         <div className="max-w-7xl mx-auto space-y-6">
-          <Header onReset={() => setData([])} unitPriceLabel={unitPriceLabel} t={t} lang={lang} setLang={setLang} />
+          <Header
+            onReset={() => setData([])}
+            unitPriceLabel={unitPriceLabel}
+            t={t}
+            lang={lang}
+            setLang={setLang}
+            currentData={filteredData}
+            filters={{ selectedNaves, selectedVariedades, selectedFormatos }}
+            settings={{ displayMode, equivWeightRaw }}
+          />
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <FilterSidebar

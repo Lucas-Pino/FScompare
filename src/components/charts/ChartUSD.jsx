@@ -21,7 +21,7 @@ export default function ChartUSD({ data, unitPriceLabel }) {
                     />
                     <Legend wrapperStyle={{ paddingTop: '20px' }} iconType="circle" />
                     {VALID_CLIENTS.map(client => (
-                        <Bar key={client} dataKey={client} fill={COLORS[client]} radius={[4, 4, 0, 0]} maxBarSize={60} />
+                        <Bar key={client} dataKey={client} fill={COLORS[client]} radius={[4, 4, 0, 0]} maxBarSize={60} isAnimationActive={false} />
                     ))}
                 </BarChart>
             </ResponsiveContainer>

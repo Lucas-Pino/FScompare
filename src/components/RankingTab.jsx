@@ -48,8 +48,8 @@ const RankingTab = ({ filteredData, marketDict, priceMultiplier, volDivider, uni
 
   return (
     <div className="space-y-6">
-      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-6">
+      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm print:border-none print:p-0">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-6 print:mb-2">
           <h3 className="text-lg font-bold text-slate-800 flex items-center">
             <Medal className="w-5 h-5 mr-2 text-amber-500" /> {t('tab_ranking')}
           </h3>
@@ -72,7 +72,7 @@ const RankingTab = ({ filteredData, marketDict, priceMultiplier, volDivider, uni
         )}
 
         {/* PODIUM */}
-        <div className="flex flex-col md:flex-row justify-center items-end gap-4 mt-12 mb-16 h-48 px-4">
+        <div className="flex flex-col md:flex-row justify-center items-end gap-4 mt-12 mb-16 h-48 px-4 print:mt-4 print:mb-8">
           {/* Segundo Lugar */}
           {top3[1] && (
             <div className="flex-1 max-w-[200px] flex flex-col items-center group relative">
@@ -90,22 +90,20 @@ const RankingTab = ({ filteredData, marketDict, priceMultiplier, volDivider, uni
           )}
 
           {/* Primer Lugar */}
-          {top3[0] && (
-            <div className="flex-1 max-w-[220px] flex flex-col items-center group relative">
-              <div className="absolute -top-12 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-xs p-2 rounded-lg z-10 whitespace-nowrap">
-                FOB: {formatUSD(top3[0].avgUsd)} | Vol: {formatNumber(top3[0].displayVol)}
-              </div>
-              <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mb-2 shadow-md border-4 border-amber-300 z-10 text-amber-600">
-                <Trophy className="w-8 h-8" />
-              </div>
-              <div className="w-full bg-gradient-to-t from-amber-50 to-white rounded-t-lg border-t-4 border-amber-400 pt-4 pb-2 px-2 text-center h-32 flex flex-col justify-start relative shadow-md">
-                <span className="font-black truncate w-full text-base" style={{color: COLORS[top3[0].name]}}>{top3[0].name}</span>
-                <span className="font-black text-amber-600 text-lg mt-1">
-                  {sortBy === 'market' ? formatPercent(top3[0].perfPct) : sortBy === 'usd' ? formatUSD(top3[0].avgUsd) : sortBy === 'rmb' ? formatRMB(top3[0].avgRmb) : formatNumber(top3[0].displayVol)}
-                </span>
-              </div>
+          <div className="flex-1 max-w-[220px] flex flex-col items-center group relative">
+            <div className="absolute -top-12 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-xs p-2 rounded-lg z-10 whitespace-nowrap">
+              FOB: {formatUSD(top3[0].avgUsd)} | Vol: {formatNumber(top3[0].displayVol)}
             </div>
-          )}
+            <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mb-2 shadow-md border-4 border-amber-300 z-10 text-amber-600">
+              <Trophy className="w-8 h-8" />
+            </div>
+            <div className="w-full bg-gradient-to-t from-amber-50 to-white rounded-t-lg border-t-4 border-amber-400 pt-4 pb-2 px-2 text-center h-32 flex flex-col justify-start relative shadow-md">
+              <span className="font-black truncate w-full text-base" style={{color: COLORS[top3[0].name]}}>{top3[0].name}</span>
+              <span className="font-black text-amber-600 text-lg mt-1">
+                {sortBy === 'market' ? formatPercent(top3[0].perfPct) : sortBy === 'usd' ? formatUSD(top3[0].avgUsd) : sortBy === 'rmb' ? formatRMB(top3[0].avgRmb) : formatNumber(top3[0].displayVol)}
+              </span>
+            </div>
+          </div>
 
           {/* Tercer Lugar */}
           {top3[2] && (

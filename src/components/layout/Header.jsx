@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { TrendingUp, RefreshCw, Download, Settings } from 'lucide-react';
+import { TrendingUp, RefreshCw, Download, Settings, Share2 } from 'lucide-react';
+import { exportToHTML } from '../../utils/exportHTML';
 
-const Header = ({ onReset, unitPriceLabel, t, lang, setLang }) => {
+const Header = ({ onReset, unitPriceLabel, t, lang, setLang, currentData, filters, settings }) => {
   const [showSettings, setShowSettings] = useState(false);
 
   return (
@@ -23,6 +24,14 @@ const Header = ({ onReset, unitPriceLabel, t, lang, setLang }) => {
           className="p-2 text-slate-500 hover:text-blue-600 bg-slate-100 hover:bg-blue-50 rounded-lg transition-colors flex items-center"
         >
           <Download className="w-5 h-5" />
+        </button>
+
+        <button
+          onClick={() => exportToHTML(currentData, filters, settings, t, lang)}
+          title="Exportar Vista Interactiva"
+          className="p-2 text-slate-500 hover:text-blue-600 bg-slate-100 hover:bg-blue-50 rounded-lg transition-colors flex items-center"
+        >
+          <Share2 className="w-5 h-5" />
         </button>
 
         <div className="relative">
