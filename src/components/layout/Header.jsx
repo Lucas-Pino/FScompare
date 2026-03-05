@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
-import { TrendingUp, RefreshCw, Download, Settings, Share2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { TrendingUp, RefreshCw, Download, Settings, Share2, User, LogOut, Shield } from 'lucide-react';
 import { exportToHTML } from '../../utils/exportHTML';
+import { useAuth } from '../../context/AuthContext';
 
 const Header = ({ onReset, unitPriceLabel, t, lang, setLang, currentData, filters, settings }) => {
   const [showSettings, setShowSettings] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+  const { user, logout } = useAuth();
 
   return (
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
@@ -54,6 +58,46 @@ const Header = ({ onReset, unitPriceLabel, t, lang, setLang, currentData, filter
                 <option value="es">🇪🇸 Español</option>
                 <option value="en">🇬🇧 English</option>
               </select>
+            </div>
+          )}
+        </div>
+
+        <div className="relative">
+          <button
+            onClick={() => setShowProfile(!showProfile)}
+            className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${showProfile ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700 hover:bg-blue-50 hover:text-blue-600'}`}
+          >
+            <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-bold">
+              {user?.name?.charAt(0) || 'U'}
+            </div>
+            <span className="text-sm font-bold truncate max-w-[100px]">{user?.name}</span>
+          </button>
+
+          {showProfile && (
+            <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-slate-100 py-2 z-50">
+              <div className="px-4 py-2 border-b border-slate-50 mb-1">
+                <p className="text-xs font-bold text-slate-400 uppercase">{user?.role === 'admin' ? 'Administrador' : 'Observador'}</p>
+                <p className="text-sm font-medium text-slate-600 truncate">{user?.email}</p>
+              </div>
+
+              {user?.role === 'admin' && (
+                <Link
+                  to="/admin"
+                  className="w-full flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors"
+                  onClick={() => setShowProfile(false)}
+                >
+                  <Shield className="w-4 h-4 mr-3 text-slate-400" />
+                  Panel de Usuarios
+                </Link>
+              )}
+
+              <button
+                onClick={logout}
+                className="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+              >
+                <LogOut className="w-4 h-4 mr-3" />
+                Cerrar Sesión
+              </button>
             </div>
           )}
         </div>
