@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Package } from 'lucide-react';
-import { VALID_CLIENTS, COLORS, DICT } from './utils/constants';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Package, ArrowLeft } from 'lucide-react';
+import { VALID_CLIENTS, DICT } from './utils/constants';
 import { parseNum, parseCSV, parseCost } from './utils/formatters';
 
 import UploadScreen from './components/UploadScreen';
@@ -17,7 +18,19 @@ import HeadToHead from './components/HeadToHead';
 import RankingTab from './components/RankingTab';
 import BreakdownTab from './components/BreakdownTab';
 
-export default function App() {
+import { AuthProvider, useAuth } from './context/AuthContext';
+import LoginPage from './components/auth/LoginPage';
+import UserManagement from './components/admin/UserManagement';
+
+const ProtectedRoute = ({ children, requireAdmin = false }) => {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" />;
+  if (requireAdmin && user.role !== 'admin') return <Navigate to="/" />;
+  return children;
+};
+
+function Dashboard() {
   const [data, setData] = useState([]);
   const [activeTab, setActiveTab] = useState('ranking');
   const [selectedNaves, setSelectedNaves] = useState([]);
@@ -107,35 +120,27 @@ export default function App() {
         }
 
         const cleanHeaders = headers.map(h => String(h).toLowerCase().replace(/\s+/g, ' ').trim());
-        const idxNave = cleanHeaders.indexOf('nave');
-        const idxVariedad = cleanHeaders.indexOf('variedad_rot');
-        const idxCalibre = cleanHeaders.indexOf('calibre_rot');
-        const idxCliente = cleanHeaders.indexOf('cliente real');
         const idxCajas = cleanHeaders.indexOf('cajas');
         const idxVta = cleanHeaders.findIndex(h => h === 'total vta' || h === 'total_vta' || h === 'total vta rmb');
         const idxPVta = cleanHeaders.findIndex(h => h === 'p. vta rmb' || h === 'p_vta_rmb' || h === 'precio vta rmb');
         const idxUSD = cleanHeaders.findIndex(h => h === 'final usd' || h === 'final_usd' || h === 'usd fob');
         const idxFinalRMB = cleanHeaders.findIndex(h => h === 'final rmb' || h === 'final_rmb' || h === 'fob rmb');
 
+        const idxNave = cleanHeaders.indexOf('nave');
+        const idxVariedad = cleanHeaders.indexOf('variedad_rot');
+        const idxCalibre = cleanHeaders.indexOf('calibre_rot');
+        const idxCliente = cleanHeaders.indexOf('cliente real');
         const idxPesoNeto = cleanHeaders.findIndex(h => h.includes('peso neto') || h.includes('peso_neto'));
         const idxContenedor = cleanHeaders.findIndex(h => h.includes('contenedor'));
         const idxProductor = cleanHeaders.findIndex(h => h.includes('productor'));
         const idxFecha = cleanHeaders.findIndex(h => h.includes('fecha_despacho') || h.includes('fecha_emb') || h.includes('embarque'));
 
-        // --- LÓGICA DE DETECCIÓN DE COSTOS (TOTALES VS UNITARIOS) ---
-        // Comisiones: Priorizar Comis Imp (que según el usuario es el total)
         const idxTTComis = cleanHeaders.findIndex(h => h === 'comis imp' || h === 'tt comis' || h === 'total comis');
         const idxComis = cleanHeaders.findIndex(h => h === 'comision' || h === 'comis' || h === 'comis.');
-
-        // Flete: Priorizar TT FC
         const idxTTFlete = cleanHeaders.findIndex(h => h === 'tt fc' || h === 'tt freight' || h === 'tt flete' || h === 'total flete' || h === 'total freight');
         const idxFlete = cleanHeaders.findIndex(h => h === 'freight cost' || h === 'freight' || h === 'flete' || h === 'flete interno');
-
-        // VAT: Priorizar TT VAT
         const idxTTVat = cleanHeaders.findIndex(h => h === 'tt vat' || h === 'tt impuesto' || h === 'total vat');
         const idxVat = cleanHeaders.findIndex(h => h === 'vat' || h === 'impuesto');
-
-        // Otros: Priorizar TT OC
         const idxTTOtros = cleanHeaders.findIndex(h => h === 'tt oc' || h === 'tt others' || h === 'tt otros' || h === 'total otros');
         const idxOtros = cleanHeaders.findIndex(h => h === 'other cost' || h === 'others cost' || h === 'otros' || h === 'others');
 
@@ -144,27 +149,18 @@ export default function App() {
         }
 
         let parsedData = [];
-
         rawData.forEach(row => {
           if (!row || row.length === 0) return;
           const client = String(row[idxCliente] || '').trim().toUpperCase();
           const cajas = parseNum(row[idxCajas]);
-
           if (VALID_CLIENTS.includes(client) && cajas > 0) {
             const pesoNetoRaw = idxPesoNeto !== -1 ? parseNum(row[idxPesoNeto]) : 5;
             const pesoNeto = pesoNetoRaw > 0 ? pesoNetoRaw : 5;
-
             const vtaRaw = parseNum(row[idxVta]);
             const pVta = idxPVta !== -1 ? parseNum(row[idxPVta]) : 0;
             const vta = vtaRaw !== 0 ? vtaRaw : (pVta !== 0 ? pVta * cajas : 0);
-
             const usd = parseNum(row[idxUSD]);
-            const finalRMB = idxFinalRMB !== -1 ? parseNum(row[idxFinalRMB]) : 0;
-
-            const isPriced = vta !== 0 || usd !== 0 || finalRMB !== 0;
-
-            // --- DETECCION DE COSTOS (TOTALES VS UNITARIOS/PERCENT) ---
-            // Prioridad absoluta a columnas de TOTAL (TT)
+            const isPriced = vta !== 0 || usd !== 0;
             const comisTotal = idxTTComis !== -1 ? parseNum(row[idxTTComis]) : (idxComis !== -1 ? parseCost(row[idxComis], vta, cajas, 'comis') : 0);
             const fleteTotal = idxTTFlete !== -1 ? parseNum(row[idxTTFlete]) : (idxFlete !== -1 ? parseNum(row[idxFlete]) * cajas : 0);
             const vatTotal = idxTTVat !== -1 ? parseNum(row[idxTTVat]) : (idxVat !== -1 ? parseNum(row[idxVat]) * cajas : 0);
@@ -174,53 +170,30 @@ export default function App() {
               Nave: String(row[idxNave] || 'Desconocida').trim(),
               Variedad: String(row[idxVariedad] || 'N/A').trim(),
               Calibre: String(row[idxCalibre] || 'N/A').trim(),
-              Cliente: client,
-              Cajas: cajas,
-              PesoNeto: pesoNeto,
-              Kilos: cajas * pesoNeto,
-              isPriced: isPriced,
-              pricedCajas: isPriced ? cajas : 0,
-              pricedKilos: isPriced ? (cajas * pesoNeto) : 0,
-              RMB: vta,
-              USD: usd,
-              FinalRMB: finalRMB,
+              Cliente: client, Cajas: cajas, PesoNeto: pesoNeto, Kilos: cajas * pesoNeto,
+              isPriced: isPriced, pricedCajas: isPriced ? cajas : 0, pricedKilos: isPriced ? (cajas * pesoNeto) : 0,
+              RMB: vta, USD: usd, Comis: comisTotal, Flete: fleteTotal, Vat: vatTotal, Otros: otrosTotal,
               Contenedor: idxContenedor !== -1 ? String(row[idxContenedor] || 'S/N').trim() : 'S/N',
               Productor: idxProductor !== -1 ? String(row[idxProductor] || 'N/A').trim() : 'N/A',
-              Fecha: idxFecha !== -1 ? String(row[idxFecha] || '').trim().split(' ')[0] : '',
-              Comis: comisTotal,
-              Flete: fleteTotal,
-              Vat: vatTotal,
-              Otros: otrosTotal
+              Fecha: idxFecha !== -1 ? String(row[idxFecha] || '').trim().split(' ')[0] : ''
             });
           }
         });
 
         if (parsedData.length === 0) {
-          setError("No se encontraron datos numéricos para los importadores seleccionados.");
+          setError("No se encontraron datos numéricos.");
           setIsLoading(false); return;
         }
-
-        setData(parsedData);
-        setSelectedNaves([]);
-        setSelectedVariedades([]);
-        setSelectedFormatos([]);
-        setIsLoading(false);
-
-      } catch (err) {
-        console.error(err);
-        setError("Error de lectura: " + err.message);
-        setIsLoading(false);
-      }
+        setData(parsedData); setIsLoading(false);
+      } catch (err) { setError(err.message); setIsLoading(false); }
     };
     reader.readAsArrayBuffer(file);
   };
 
-  // --- DERIVED STATE / HOOKS ---
   const equivWeight = Number(equivWeightRaw) > 0 ? Number(equivWeightRaw) : 1;
   const isBoxMode = displayMode === 'box';
   const priceMultiplier = isBoxMode ? equivWeight : 1;
   const volDivider = isBoxMode ? equivWeight : 1;
-
   const unitPriceLabel = isBoxMode ? `${t('box_eq')} ${equivWeight}Kg` : t('kilo');
   const unitVolLabel = isBoxMode ? `Cajas Eq (${equivWeight}Kg)` : t('kilo');
 
@@ -233,9 +206,7 @@ export default function App() {
     data.forEach(d => {
       const key = `${d.Nave}|${d.Variedad}|${d.Calibre}|${d.PesoNeto}`;
       if (!dict[key]) dict[key] = { rmb: 0, usd: 0, kilos: 0 };
-      dict[key].rmb += d.RMB;
-      dict[key].usd += d.USD;
-      dict[key].kilos += d.pricedKilos;
+      dict[key].rmb += d.RMB; dict[key].usd += d.USD; dict[key].kilos += d.pricedKilos;
     });
     return dict;
   }, [data]);
@@ -294,14 +265,11 @@ export default function App() {
     const totals = {};
     filteredData.forEach(d => {
       if (!totals[d.Cliente]) totals[d.Cliente] = { kilos: 0, cajas: 0, varieties: new Set() };
-      totals[d.Cliente].kilos += d.Kilos;
-      totals[d.Cliente].cajas += d.Cajas;
+      totals[d.Cliente].kilos += d.Kilos; totals[d.Cliente].cajas += d.Cajas;
       totals[d.Cliente].varieties.add(d.Variedad);
     });
     return Object.keys(totals).map(k => ({
-      name: k,
-      value: totals[k].kilos / volDivider,
-      cajas: totals[k].cajas,
+      name: k, value: totals[k].kilos / volDivider, cajas: totals[k].cajas,
       varieties: Array.from(totals[k].varieties).join(', ')
     })).sort((a,b) => b.value - a.value);
   }, [filteredData, volDivider]);
@@ -314,13 +282,9 @@ export default function App() {
       tCajas += d.Cajas; tKilos += d.Kilos;
       if (!clientTotals[d.Cliente]) clientTotals[d.Cliente] = { name: d.Cliente, sumPricedKilos: 0, sumRMB: 0, sumUSD: 0 };
       clientTotals[d.Cliente].sumPricedKilos += d.pricedKilos;
-      clientTotals[d.Cliente].sumRMB += d.RMB;
-      clientTotals[d.Cliente].sumUSD += d.USD;
+      clientTotals[d.Cliente].sumRMB += d.RMB; clientTotals[d.Cliente].sumUSD += d.USD;
     });
-
-    let bestRMB = { name: '-', val: -Infinity };
-    let bestUSD = { name: '-', val: -Infinity };
-
+    let bestRMB = { name: '-', val: -Infinity }, bestUSD = { name: '-', val: -Infinity };
     Object.values(clientTotals).forEach(c => {
       const avgRMB = c.sumPricedKilos > 0 ? (c.sumRMB / c.sumPricedKilos) * priceMultiplier : 0;
       const avgUSD = c.sumPricedKilos > 0 ? (c.sumUSD / c.sumPricedKilos) * priceMultiplier : 0;
@@ -334,16 +298,12 @@ export default function App() {
     const dataA = filteredData.filter(d => d.Cliente === clientA);
     const dataB = filteredData.filter(d => d.Cliente === clientB);
     const calc = (arr) => {
-      const cajas = arr.reduce((acc, d) => acc + d.Cajas, 0);
       const kilos = arr.reduce((acc, d) => acc + d.Kilos, 0);
       const pricedKilos = arr.reduce((acc, d) => acc + d.pricedKilos, 0);
       const rmb = arr.reduce((acc, d) => acc + d.RMB, 0);
       const usd = arr.reduce((acc, d) => acc + d.USD, 0);
       return {
-        cajas,
-        kilos,
-        displayVol: kilos / volDivider,
-        totalUSD: usd,
+        displayVol: kilos / volDivider, totalUSD: usd,
         avgRMB: pricedKilos > 0 ? (rmb / pricedKilos) * priceMultiplier : 0,
         avgUSD: pricedKilos > 0 ? (usd / pricedKilos) * priceMultiplier : 0
       };
@@ -363,18 +323,13 @@ export default function App() {
           res[client] = g[client].sumKilos > 0 ? parseFloat(((g[client].sumUSD / g[client].sumKilos) * priceMultiplier).toFixed(2)) : 0;
           res[`${client}_vol`] = parseFloat((g[client].sumKilos / volDivider).toFixed(1));
           res._varieties[client] = Array.from(g[client].varieties).join(', ');
-        } else {
-          res[client] = 0;
-          res[`${client}_vol`] = 0;
-          res._varieties[client] = '';
-        }
+        } else { res[client] = 0; res[`${client}_vol`] = 0; res._varieties[client] = ''; }
       });
       return res;
     });
     return { statsA: calc(dataA), statsB: calc(dataB), chartH2H };
   }, [filteredData, clientA, clientB, priceMultiplier, volDivider]);
 
-  // --- RENDER ---
   if (data.length === 0) return (
     <>
       <PrintStyles />
@@ -388,16 +343,10 @@ export default function App() {
       <div className="min-h-screen bg-slate-50 p-6 font-sans text-slate-800 relative">
         <div className="max-w-7xl mx-auto space-y-6">
           <Header
-            onReset={() => setData([])}
-            unitPriceLabel={unitPriceLabel}
-            t={t}
-            lang={lang}
-            setLang={setLang}
-            currentData={filteredData}
-            filters={{ selectedNaves, selectedVariedades, selectedFormatos }}
+            onReset={() => setData([])} unitPriceLabel={unitPriceLabel} t={t} lang={lang} setLang={setLang}
+            currentData={filteredData} filters={{ selectedNaves, selectedVariedades, selectedFormatos }}
             settings={{ displayMode, equivWeightRaw }}
           />
-
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <FilterSidebar
               naves={naves} variedades={variedades} formatos={formatos}
@@ -406,46 +355,26 @@ export default function App() {
               selectedFormatos={selectedFormatos} setSelectedFormatos={setSelectedFormatos}
               displayMode={displayMode} setDisplayMode={setDisplayMode}
               equivWeight={equivWeightRaw} setEquivWeight={setEquivWeightRaw}
-              totalCajas={totalCajas} totalVol={totalVol} unitVolLabel={unitVolLabel}
-              t={t}
+              totalCajas={totalCajas} totalVol={totalVol} unitVolLabel={unitVolLabel} t={t}
             />
-
             <div className="lg:col-span-3 space-y-6">
               <ActiveFiltersBadge naves={selectedNaves} vars={selectedVariedades} formats={selectedFormatos} t={t} />
-
               {activeTab !== 'ranking' && <TopKpis winnerRMB={winnerRMB} winnerUSD={winnerUSD} unitPriceLabel={unitPriceLabel} t={t} />}
-
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                 <div className="flex space-x-1 bg-slate-100 p-1 rounded-xl mb-6 overflow-x-auto no-print">
                   {[
-                    { id: 'ranking', label: t('tab_ranking') },
-                    { id: 'usd', label: t('tab_usd') },
-                    { id: 'rmb', label: t('tab_rmb') },
-                    { id: 'vol', label: t('tab_vol') },
-                    { id: 'h2h', label: t('tab_h2h') },
-                    { id: 'breakdown', label: t('tab_breakdown') }
+                    { id: 'ranking', label: t('tab_ranking') }, { id: 'usd', label: t('tab_usd') }, { id: 'rmb', label: t('tab_rmb') },
+                    { id: 'vol', label: t('tab_vol') }, { id: 'h2h', label: t('tab_h2h') }, { id: 'breakdown', label: t('tab_breakdown') }
                   ].map(tab => (
                     <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex-1 min-w-[140px] py-2.5 text-sm font-semibold rounded-lg transition-colors ${activeTab === tab.id ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200'}`}>
                       {tab.label}
                     </button>
                   ))}
                 </div>
-
                 {activeTab === 'ranking' ? (
-                  <RankingTab
-                    filteredData={filteredData} marketDict={marketDict}
-                    priceMultiplier={priceMultiplier} volDivider={volDivider}
-                    unitPriceLabel={unitPriceLabel} unitVolLabel={unitVolLabel}
-                    t={t}
-                  />
+                  <RankingTab filteredData={filteredData} marketDict={marketDict} priceMultiplier={priceMultiplier} volDivider={volDivider} unitPriceLabel={unitPriceLabel} unitVolLabel={unitVolLabel} t={t} />
                 ) : activeTab === 'breakdown' ? (
-                  <BreakdownTab
-                    client={breakdownClient} setClient={setBreakdownClient}
-                    filteredData={filteredData} marketDict={marketDict}
-                    priceMultiplier={priceMultiplier} volDivider={volDivider}
-                    unitPriceLabel={unitPriceLabel} unitVolLabel={unitVolLabel}
-                    t={t}
-                  />
+                  <BreakdownTab client={breakdownClient} setClient={setBreakdownClient} filteredData={filteredData} marketDict={marketDict} priceMultiplier={priceMultiplier} volDivider={volDivider} unitPriceLabel={unitPriceLabel} unitVolLabel={unitVolLabel} t={t} />
                 ) : filteredData.length === 0 ? (
                   <div className="py-20 text-center text-slate-400"><Package className="w-12 h-12 mx-auto mb-3 opacity-50" /><p>{t('no_data')}</p></div>
                 ) : (
@@ -453,16 +382,7 @@ export default function App() {
                     {activeTab === 'usd' && <ChartUSD data={chartDataUSD} unitPriceLabel={unitPriceLabel} />}
                     {activeTab === 'rmb' && <ChartRMB data={chartDataRMB} unitPriceLabel={unitPriceLabel} />}
                     {activeTab === 'vol' && <ChartVolume data={pieData} unitVolLabel={unitVolLabel} t={t} />}
-                    {activeTab === 'h2h' && (
-                      <HeadToHead
-                        clientA={clientA} setClientA={setClientA}
-                        clientB={clientB} setClientB={setClientB}
-                        chartDataH2H={h2hStats.chartH2H}
-                        statsA={h2hStats.statsA} statsB={h2hStats.statsB}
-                        unitPriceLabel={unitPriceLabel} unitVolLabel={unitVolLabel}
-                        t={t}
-                      />
-                    )}
+                    {activeTab === 'h2h' && <HeadToHead clientA={clientA} setClientA={setClientA} clientB={clientB} setClientB={setClientB} chartDataH2H={h2hStats.chartH2H} statsA={h2hStats.statsA} statsB={h2hStats.statsB} unitPriceLabel={unitPriceLabel} unitVolLabel={unitVolLabel} t={t} />}
                   </div>
                 )}
               </div>
@@ -471,5 +391,36 @@ export default function App() {
         </div>
       </div>
     </>
+  );
+}
+
+function AdminPage() {
+  const navigate = useNavigate();
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <nav className="bg-white border-b border-slate-100 p-4 shadow-sm">
+        <div className="max-w-7xl mx-auto flex items-center">
+          <button onClick={() => navigate('/')} className="flex items-center text-slate-500 hover:text-blue-600 transition-colors font-bold text-sm">
+            <ArrowLeft className="w-4 h-4 mr-2" /> Volver al Dashboard
+          </button>
+        </div>
+      </nav>
+      <UserManagement />
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/admin" element={<ProtectedRoute requireAdmin={true}><AdminPage /></ProtectedRoute>} />
+          <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
