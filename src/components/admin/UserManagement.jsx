@@ -8,22 +8,47 @@ const UserManagement = () => {
   const [showAddForm, setShowAddForm] = useState(false);
 
   const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'viewer' });
+  const [message, setMessage] = useState(null);
 
   const handleEdit = (user) => {
     setEditingId(user.id);
     setFormData({ ...user });
+    setMessage(null);
+  };
+
+  const handleDelete = (id) => {
+    const result = deleteUser(id);
+    if (!result.success) {
+      setMessage({ type: 'error', text: result.message });
+    } else {
+      setMessage({ type: 'success', text: 'Usuario eliminado correctamente' });
+    }
+    setTimeout(() => setMessage(null), 3000);
   };
 
   const handleSave = (e) => {
     e.preventDefault();
+    let result;
     if (editingId) {
-      updateUser(editingId, formData);
-      setEditingId(null);
+      result = updateUser(editingId, formData);
+      if (result.success) {
+        setEditingId(null);
+        setMessage({ type: 'success', text: 'Usuario actualizado correctamente' });
+      }
     } else {
-      addUser(formData);
-      setShowAddForm(false);
+      result = addUser(formData);
+      if (result.success) {
+        setShowAddForm(false);
+        setMessage({ type: 'success', text: 'Usuario creado correctamente' });
+      }
     }
-    setFormData({ name: '', email: '', password: '', role: 'viewer' });
+
+    if (result && !result.success) {
+      setMessage({ type: 'error', text: result.message });
+    } else {
+      setFormData({ name: '', email: '', password: '', role: 'viewer' });
+      setTimeout(() => setMessage(null), 3000);
+    }
   };
 
   return (
@@ -34,12 +59,19 @@ const UserManagement = () => {
           <p className="text-slate-500 text-sm">Administra los accesos al dashboard</p>
         </div>
         <button
-          onClick={() => setShowAddForm(true)}
+          onClick={() => { setShowAddForm(true); setEditingId(null); setFormData({ name: '', email: '', password: '', role: 'viewer' }); setMessage(null); }}
           className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg flex items-center transition-colors shadow-sm"
         >
           <UserPlus className="w-4 h-4 mr-2" /> Nuevo Usuario
         </button>
       </div>
+
+      {message && (
+        <div className={`mb-6 p-4 rounded-xl text-sm border flex items-center animate-in fade-in duration-300 ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-red-50 text-red-700 border-red-100'}`}>
+          <div className={`w-2 h-2 rounded-full mr-3 ${message.type === 'success' ? 'bg-emerald-500' : 'bg-red-500'}`} />
+          {message.text}
+        </div>
+      )}
 
       {(showAddForm || editingId) && (
         <div className="bg-white p-6 rounded-2xl border border-blue-100 shadow-sm mb-8 animate-in slide-in-from-top-4 duration-300">
@@ -133,9 +165,10 @@ const UserManagement = () => {
                       <Edit2 className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={() => deleteUser(u.id)}
+                      onClick={() => handleDelete(u.id)}
                       disabled={currentUser.id === u.id}
-                      className={`p-2 rounded-lg transition-all ${currentUser.id === u.id ? 'text-slate-200' : 'text-slate-400 hover:text-red-600 hover:bg-red-50'}`}
+                      className={`p-2 rounded-lg transition-all ${currentUser.id === u.id ? 'text-slate-200 cursor-not-allowed' : 'text-slate-400 hover:text-red-600 hover:bg-red-50'}`}
+                      title={currentUser.id === u.id ? "No puedes eliminar tu propio usuario" : "Eliminar usuario"}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>

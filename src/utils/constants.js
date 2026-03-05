@@ -84,7 +84,8 @@ export const DICT = {
     download_pdf: "Descargar PDF",
     selected_items: "seleccionadas",
     applied_filters: "Filtros aplicados",
-    h2h_vol_chart: "Comparativa de Volumen por Calibre"
+    h2h_vol_chart: "Comparativa de Volumen por Calibre",
+    h2h_favor_side: "A favor del"
   },
   en: {
     upload_title: "Pura Vida Analytics",
@@ -159,6 +160,7 @@ export const DICT = {
     download_pdf: "Download PDF",
     selected_items: "selected",
     applied_filters: "Applied filters",
-    h2h_vol_chart: "Volume Comparison by Size"
+    h2h_vol_chart: "Volume Comparison by Size",
+    h2h_favor_side: "In favor of"
   }
 };
