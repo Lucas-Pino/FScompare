@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Bar } from 'recharts';
-import { Scale, ArrowUpRight } from 'lucide-react';
+import { Scale } from 'lucide-react';
 import { formatUSD, formatRMB, formatNumber } from '../utils/formatters';
 import { VALID_CLIENTS, COLORS } from '../utils/constants';
+import MultiSelect from './MultiSelect';
 
 const VsRow = ({ label, valA, valB, formatFn }) => {
   const aWins = valA > valB;
@@ -22,46 +23,51 @@ const VsRow = ({ label, valA, valB, formatFn }) => {
   );
 };
 
-const HeadToHead = ({ clientA, setClientA, clientB, setClientB, chartDataH2H, statsA, statsB, unitPriceLabel, unitVolLabel, t }) => {
+const HeadToHead = ({ clientA, setClientA, selectedClientsB, setSelectedClientsB, chartDataH2H, statsA, statsB, unitPriceLabel, unitVolLabel, t }) => {
   const [compMode, setCompMode] = useState('real'); // 'real' | 'adjusted'
+
+  const isMultiB = selectedClientsB.length > 1;
+  const labelB = isMultiB ? (selectedClientsB.length === 0 ? t('all') : `${selectedClientsB.length} ${t('selected_items')}`) : (selectedClientsB.length === 0 ? t('all') : selectedClientsB[0]);
+  const colorB = isMultiB || selectedClientsB.length === 0 ? '#64748b' : COLORS[selectedClientsB[0]];
 
   const diffAvg = statsA.avgUSD - statsB.avgUSD;
   const absDiffAvg = Math.abs(diffAvg);
 
-  // Logic for Adjusted Difference: (AvgA - AvgB) * min(VolA, VolB)
   const minVol = Math.min(statsA.displayVol, statsB.displayVol);
   const adjustedDiffTotal = diffAvg * minVol;
-
   const realDiffTotal = statsA.totalUSD - statsB.totalUSD;
 
   const currentDiffTotal = compMode === 'real' ? realDiffTotal : adjustedDiffTotal;
   const absDiffTotal = Math.abs(currentDiffTotal);
 
-  const winnerAvg = diffAvg > 0 ? clientA : (diffAvg < 0 ? clientB : t('tie'));
-  const winnerTotal = currentDiffTotal > 0 ? clientA : (currentDiffTotal < 0 ? clientB : t('tie'));
+  const winnerAvg = diffAvg > 0 ? clientA : (diffAvg < 0 ? labelB : t('tie'));
+  const winnerTotal = currentDiffTotal > 0 ? clientA : (currentDiffTotal < 0 ? labelB : t('tie'));
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between space-x-4 bg-slate-50 p-4 rounded-2xl border border-slate-200 shadow-inner no-print">
         <div className="flex-1">
           <label className="text-xs font-black text-slate-400 uppercase mb-2 flex items-center">
-            <span className="w-3 h-3 rounded-full mr-2" style={{backgroundColor: COLORS[clientA]}}></span> Cliente A
+            <span className="w-3 h-3 rounded-full mr-2" style={{backgroundColor: COLORS[clientA]}}></span> Principal (A)
           </label>
-          <select value={clientA} onChange={e => setClientA(e.target.value)} className="w-full bg-white border border-slate-300 text-slate-900 font-bold rounded-lg p-3">
-            {VALID_CLIENTS.map(c => <option key={c} value={c}>{c}</option>)}
+          <select value={clientA} onChange={e => setClientA(e.target.value)} className="w-full bg-white border border-slate-200 text-slate-800 text-sm font-bold rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500">
+            {VALID_CLIENTS.map(c => <option key={c} value={c} disabled={selectedClientsB.includes(c)}>{c}</option>)}
           </select>
         </div>
         <div className="flex flex-col items-center justify-center px-4">
           <Scale className="w-8 h-8 text-slate-300 mb-1" />
-          <span className="font-black text-slate-400 text-sm tracking-widest">VS</span>
+          <span className="font-black text-slate-400 text-[10px] tracking-widest">VS</span>
         </div>
         <div className="flex-1">
           <label className="text-xs font-black text-slate-400 uppercase mb-2 flex items-center justify-end">
-            Cliente B <span className="w-3 h-3 rounded-full ml-2" style={{backgroundColor: COLORS[clientB]}}></span>
+            Comparar con (B) <span className="w-3 h-3 rounded-full ml-2" style={{backgroundColor: colorB}}></span>
           </label>
-          <select value={clientB} onChange={e => setClientB(e.target.value)} className="w-full bg-white border border-slate-300 text-slate-900 font-bold text-right rounded-lg p-3" dir="rtl">
-            {VALID_CLIENTS.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
+          <MultiSelect
+            options={VALID_CLIENTS.filter(c => c !== clientA)}
+            selected={selectedClientsB}
+            onChange={setSelectedClientsB}
+            t={t}
+          />
         </div>
       </div>
 
@@ -102,7 +108,7 @@ const HeadToHead = ({ clientA, setClientA, clientB, setClientB, chartDataH2H, st
             </p>
             <p className="text-3xl md:text-4xl font-black text-blue-700 mb-2">{formatUSD(absDiffAvg)}</p>
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-              {t('h2h_favor')}: <span className="text-blue-600 font-black" style={{color: COLORS[winnerAvg]}}>{winnerAvg}</span>
+              {t('h2h_favor')}: <span className="font-black" style={{color: diffAvg > 0 ? COLORS[clientA] : colorB}}>{winnerAvg}</span>
             </p>
           </div>
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-blue-100 text-center flex flex-col justify-center">
@@ -111,7 +117,7 @@ const HeadToHead = ({ clientA, setClientA, clientB, setClientB, chartDataH2H, st
             </p>
             <p className="text-3xl md:text-4xl font-black text-blue-700 mb-2">{formatUSD(absDiffTotal)}</p>
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-              {t('h2h_favor')}: <span className="text-blue-600 font-black" style={{color: COLORS[winnerTotal]}}>{winnerTotal}</span>
+              {t('h2h_favor')}: <span className="font-black" style={{color: currentDiffTotal > 0 ? COLORS[clientA] : colorB}}>{winnerTotal}</span>
             </p>
           </div>
         </div>
@@ -128,14 +134,17 @@ const HeadToHead = ({ clientA, setClientA, clientB, setClientB, chartDataH2H, st
               <Tooltip
                 formatter={(value, name, props) => {
                   const vars = props.payload._varieties?.[name];
-                  return [formatUSD(value), `${name}${vars ? ` (${vars})` : ''}`];
+                  const displayName = name === 'sideA' ? clientA : labelB;
+                  return [formatUSD(value), `${displayName}${vars ? ` (${vars})` : ''}`];
                 }}
                 cursor={{fill: '#f1f5f9'}}
                 contentStyle={{borderRadius: '8px', border: 'none'}}
               />
-              <Legend wrapperStyle={{ paddingTop: '10px' }} iconType="circle" />
-              <Bar dataKey={clientA} fill={COLORS[clientA]} radius={[4, 4, 0, 0]} maxBarSize={50} isAnimationActive={false} />
-              <Bar dataKey={clientB} fill={COLORS[clientB]} radius={[4, 4, 0, 0]} maxBarSize={50} isAnimationActive={false} />
+              <Legend wrapperStyle={{ paddingTop: '10px' }} iconType="circle"
+                formatter={(value) => value === 'sideA' ? clientA : labelB}
+              />
+              <Bar dataKey="sideA" name="sideA" fill={COLORS[clientA]} radius={[4, 4, 0, 0]} maxBarSize={50} isAnimationActive={false} />
+              <Bar dataKey="sideB" name="sideB" fill={colorB} radius={[4, 4, 0, 0]} maxBarSize={50} isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -151,9 +160,10 @@ const HeadToHead = ({ clientA, setClientA, clientB, setClientB, chartDataH2H, st
               <YAxis width={60} tickFormatter={(val) => formatNumber(val)} axisLine={false} tickLine={false} tick={{fill: '#64748b'}} />
               <Tooltip
                 formatter={(value, name, props) => {
-                  const clientName = String(name).replace('_vol', '');
-                  const vars = props.payload._varieties?.[clientName];
-                  return [`${formatNumber(value)} ${unitVolLabel}`, `${clientName}${vars ? ` (${vars})` : ''}`];
+                  const side = String(name).replace('_vol', '');
+                  const displayName = side === 'sideA' ? clientA : labelB;
+                  const vars = props.payload._varieties?.[side];
+                  return [`${formatNumber(value)} ${unitVolLabel}`, `${displayName}${vars ? ` (${vars})` : ''}`];
                 }}
                 cursor={{fill: '#f1f5f9'}}
                 contentStyle={{borderRadius: '8px', border: 'none'}}
@@ -161,10 +171,10 @@ const HeadToHead = ({ clientA, setClientA, clientB, setClientB, chartDataH2H, st
               <Legend
                 wrapperStyle={{ paddingTop: '10px' }}
                 iconType="circle"
-                formatter={(value) => String(value).replace('_vol', '')}
+                formatter={(value) => value === 'sideA_vol' ? clientA : labelB}
               />
-              <Bar dataKey={`${clientA}_vol`} fill={COLORS[clientA]} radius={[4, 4, 0, 0]} maxBarSize={50} isAnimationActive={false} />
-              <Bar dataKey={`${clientB}_vol`} fill={COLORS[clientB]} radius={[4, 4, 0, 0]} maxBarSize={50} isAnimationActive={false} />
+              <Bar dataKey="sideA_vol" name="sideA_vol" fill={COLORS[clientA]} radius={[4, 4, 0, 0]} maxBarSize={50} isAnimationActive={false} />
+              <Bar dataKey="sideB_vol" name="sideB_vol" fill={colorB} radius={[4, 4, 0, 0]} maxBarSize={50} isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
         </div>

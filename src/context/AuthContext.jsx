@@ -44,21 +44,32 @@ export const AuthProvider = ({ children }) => {
   };
 
   const addUser = (newUser) => {
-    const id = Math.max(0, ...users.map(u => u.id)) + 1;
-    setUsers([...users, { ...newUser, id }]);
+    if (users.some(u => u.email.toLowerCase() === newUser.email.toLowerCase())) {
+      return { success: false, message: "Ya existe un usuario con este email" };
+    }
+    setUsers(prevUsers => {
+      const id = Math.max(0, ...prevUsers.map(u => u.id)) + 1;
+      return [...prevUsers, { ...newUser, id }];
+    });
+    return { success: true };
   };
 
   const updateUser = (id, updatedData) => {
+    if (users.some(u => u.id !== id && u.email.toLowerCase() === updatedData.email.toLowerCase())) {
+      return { success: false, message: "Ya existe otro usuario con este email" };
+    }
     setUsers(users.map(u => u.id === id ? { ...u, ...updatedData } : u));
     if (user && user.id === id) {
         const { password, ...rest } = { ...user, ...updatedData };
         setUser(rest);
         localStorage.setItem('pv_current_user', JSON.stringify(rest));
     }
+    return { success: true };
   };
 
   const deleteUser = (id) => {
     if (users.length <= 1) return { success: false, message: "No se puede eliminar el último usuario" };
+    if (user && user.id === id) return { success: false, message: "No puedes eliminar tu propio usuario" };
     setUsers(users.filter(u => u.id !== id));
     return { success: true };
   };

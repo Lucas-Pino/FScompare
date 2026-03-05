@@ -43,7 +43,7 @@ function Dashboard() {
   const [equivWeightRaw, setEquivWeightRaw] = useState(5);
 
   const [clientA, setClientA] = useState(VALID_CLIENTS[0]);
-  const [clientB, setClientB] = useState(VALID_CLIENTS[1]);
+  const [selectedClientsB, setSelectedClientsB] = useState([VALID_CLIENTS[1]]);
   const [breakdownClient, setBreakdownClient] = useState(VALID_CLIENTS[0]);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -296,7 +296,8 @@ function Dashboard() {
 
   const h2hStats = useMemo(() => {
     const dataA = filteredData.filter(d => d.Cliente === clientA);
-    const dataB = filteredData.filter(d => d.Cliente === clientB);
+    const dataB = filteredData.filter(d => d.Cliente !== clientA && (selectedClientsB.length === 0 || selectedClientsB.includes(d.Cliente)));
+
     const calc = (arr) => {
       const kilos = arr.reduce((acc, d) => acc + d.Kilos, 0);
       const pricedKilos = arr.reduce((acc, d) => acc + d.pricedKilos, 0);
@@ -308,46 +309,55 @@ function Dashboard() {
         avgUSD: pricedKilos > 0 ? (usd / pricedKilos) * priceMultiplier : 0
       };
     };
+
     const chartData = {};
     [...dataA, ...dataB].forEach(d => {
       if (!chartData[d.Calibre]) chartData[d.Calibre] = { Calibre: d.Calibre, _varieties: {} };
-      if (!chartData[d.Calibre][d.Cliente]) chartData[d.Calibre][d.Cliente] = { sumUSD: 0, sumKilos: 0, varieties: new Set() };
-      chartData[d.Calibre][d.Cliente].sumUSD += d.USD;
-      chartData[d.Calibre][d.Cliente].sumKilos += d.pricedKilos;
-      chartData[d.Calibre][d.Cliente].varieties.add(d.Variedad);
+
+      const isSideA = d.Cliente === clientA;
+      const key = isSideA ? 'sideA' : 'sideB';
+
+      if (!chartData[d.Calibre][key]) chartData[d.Calibre][key] = { sumUSD: 0, sumKilos: 0, varieties: new Set() };
+      chartData[d.Calibre][key].sumUSD += d.USD;
+      chartData[d.Calibre][key].sumKilos += d.pricedKilos;
+      chartData[d.Calibre][key].varieties.add(d.Variedad);
     });
+
     const chartH2H = Object.values(chartData).map(g => {
       const res = { Calibre: g.Calibre, _varieties: {} };
-      [clientA, clientB].forEach(client => {
-        if (g[client]) {
-          res[client] = g[client].sumKilos > 0 ? parseFloat(((g[client].sumUSD / g[client].sumKilos) * priceMultiplier).toFixed(2)) : 0;
-          res[`${client}_vol`] = parseFloat((g[client].sumKilos / volDivider).toFixed(1));
-          res._varieties[client] = Array.from(g[client].varieties).join(', ');
-        } else { res[client] = 0; res[`${client}_vol`] = 0; res._varieties[client] = ''; }
+      ['sideA', 'sideB'].forEach(key => {
+        if (g[key]) {
+          res[key] = g[key].sumKilos > 0 ? parseFloat(((g[key].sumUSD / g[key].sumKilos) * priceMultiplier).toFixed(2)) : 0;
+          res[`${key}_vol`] = parseFloat((g[key].sumKilos / volDivider).toFixed(1));
+          res._varieties[key] = Array.from(g[key].varieties).join(', ');
+        } else {
+          res[key] = 0; res[`${key}_vol`] = 0; res._varieties[key] = '';
+        }
       });
       return res;
     });
-    return { statsA: calc(dataA), statsB: calc(dataB), chartH2H };
-  }, [filteredData, clientA, clientB, priceMultiplier, volDivider]);
 
-  if (data.length === 0) return (
-    <>
-      <PrintStyles />
-      <UploadScreen onUpload={handleFileUpload} isLoading={isLoading} error={error} t={t} lang={lang} setLang={setLang} />
-    </>
-  );
+    return { statsA: calc(dataA), statsB: calc(dataB), chartH2H };
+  }, [filteredData, clientA, selectedClientsB, priceMultiplier, volDivider]);
 
   return (
     <>
       <PrintStyles />
-      <div className="min-h-screen bg-slate-50 p-6 font-sans text-slate-800 relative">
+      <div className="min-h-screen bg-slate-50 p-4 md:p-6 font-sans text-slate-800 relative">
         <div className="max-w-7xl mx-auto space-y-6">
           <Header
             onReset={() => setData([])} unitPriceLabel={unitPriceLabel} t={t} lang={lang} setLang={setLang}
             currentData={filteredData} filters={{ selectedNaves, selectedVariedades, selectedFormatos }}
             settings={{ displayMode, equivWeightRaw }}
+            showReset={data.length > 0}
           />
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+
+          {data.length === 0 ? (
+            <div className="py-12">
+              <UploadScreen onUpload={handleFileUpload} isLoading={isLoading} error={error} t={t} lang={lang} setLang={setLang} hideLanguageToggle={true} />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <FilterSidebar
               naves={naves} variedades={variedades} formatos={formatos}
               selectedNaves={selectedNaves} setSelectedNaves={setSelectedNaves}
@@ -382,12 +392,20 @@ function Dashboard() {
                     {activeTab === 'usd' && <ChartUSD data={chartDataUSD} unitPriceLabel={unitPriceLabel} />}
                     {activeTab === 'rmb' && <ChartRMB data={chartDataRMB} unitPriceLabel={unitPriceLabel} />}
                     {activeTab === 'vol' && <ChartVolume data={pieData} unitVolLabel={unitVolLabel} t={t} />}
-                    {activeTab === 'h2h' && <HeadToHead clientA={clientA} setClientA={setClientA} clientB={clientB} setClientB={setClientB} chartDataH2H={h2hStats.chartH2H} statsA={h2hStats.statsA} statsB={h2hStats.statsB} unitPriceLabel={unitPriceLabel} unitVolLabel={unitVolLabel} t={t} />}
+                    {activeTab === 'h2h' && (
+                      <HeadToHead
+                        clientA={clientA} setClientA={setClientA}
+                        selectedClientsB={selectedClientsB} setSelectedClientsB={setSelectedClientsB}
+                        chartDataH2H={h2hStats.chartH2H} statsA={h2hStats.statsA} statsB={h2hStats.statsB}
+                        unitPriceLabel={unitPriceLabel} unitVolLabel={unitVolLabel} t={t}
+                      />
+                    )}
                   </div>
                 )}
               </div>
             </div>
           </div>
+          )}
         </div>
       </div>
     </>

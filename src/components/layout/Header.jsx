@@ -4,7 +4,7 @@ import { TrendingUp, RefreshCw, Download, Settings, Share2, User, LogOut, Shield
 import { exportToHTML } from '../../utils/exportHTML';
 import { useAuth } from '../../context/AuthContext';
 
-const Header = ({ onReset, unitPriceLabel, t, lang, setLang, currentData, filters, settings }) => {
+const Header = ({ onReset, unitPriceLabel, t, lang, setLang, currentData, filters, settings, showReset }) => {
   const [showSettings, setShowSettings] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const { user, logout } = useAuth();
@@ -18,9 +18,11 @@ const Header = ({ onReset, unitPriceLabel, t, lang, setLang, currentData, filter
         <p className="text-sm text-slate-500 mt-1">{t('dash_sub')} ({unitPriceLabel})</p>
       </div>
       <div className="mt-4 md:mt-0 flex items-center space-x-3 no-print">
+        {showReset && (
         <button onClick={onReset} className="text-sm flex items-center text-slate-500 hover:text-blue-600 transition-colors bg-slate-100 hover:bg-blue-50 px-4 py-2 rounded-lg">
           <RefreshCw className="w-4 h-4 mr-2" /> {t('load_other')}
         </button>
+        )}
 
         <button
           onClick={() => window.print()}
@@ -65,6 +67,7 @@ const Header = ({ onReset, unitPriceLabel, t, lang, setLang, currentData, filter
         <div className="relative">
           <button
             onClick={() => setShowProfile(!showProfile)}
+            id="profile-menu-button"
             className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${showProfile ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700 hover:bg-blue-50 hover:text-blue-600'}`}
           >
             <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-bold">
