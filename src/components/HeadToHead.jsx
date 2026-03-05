@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Bar } from 'recharts';
-import { Scale } from 'lucide-react';
+import { Scale, ArrowUpRight } from 'lucide-react';
 import { formatUSD, formatRMB, formatNumber } from '../utils/formatters';
 import { VALID_CLIENTS, COLORS } from '../utils/constants';
 
@@ -13,7 +13,7 @@ const VsRow = ({ label, valA, valB, formatFn }) => {
         {formatFn(valA)}
         {aWins && <span className="ml-2 text-xs text-emerald-500">▲</span>}
       </div>
-      <div className="w-1/3 text-center text-xs font-bold text-slate-400 uppercase tracking-widest">{label}</div>
+      <div className="w-1/3 text-center text-xs font-bold text-slate-400 uppercase tracking-widest leading-tight">{label}</div>
       <div className={`w-1/3 text-center text-lg md:text-xl font-bold ${bWins ? 'text-emerald-600' : 'text-slate-500'}`}>
         {bWins && <span className="mr-2 text-xs text-emerald-500">▲</span>}
         {formatFn(valB)}
@@ -23,10 +23,22 @@ const VsRow = ({ label, valA, valB, formatFn }) => {
 };
 
 const HeadToHead = ({ clientA, setClientA, clientB, setClientB, chartDataH2H, statsA, statsB, unitPriceLabel, unitVolLabel, t }) => {
-  const diffAvg = Math.abs(statsA.avgUSD - statsB.avgUSD);
-  const diffTotal = Math.abs(statsA.totalUSD - statsB.totalUSD);
-  const winnerAvg = statsA.avgUSD > statsB.avgUSD ? clientA : (statsB.avgUSD > statsA.avgUSD ? clientB : t('tie'));
-  const winnerTotal = statsA.totalUSD > statsB.totalUSD ? clientA : (statsB.totalUSD > statsA.totalUSD ? clientB : t('tie'));
+  const [compMode, setCompMode] = useState('real'); // 'real' | 'adjusted'
+
+  const diffAvg = statsA.avgUSD - statsB.avgUSD;
+  const absDiffAvg = Math.abs(diffAvg);
+
+  // Logic for Adjusted Difference: (AvgA - AvgB) * min(VolA, VolB)
+  const minVol = Math.min(statsA.displayVol, statsB.displayVol);
+  const adjustedDiffTotal = diffAvg * minVol;
+
+  const realDiffTotal = statsA.totalUSD - statsB.totalUSD;
+
+  const currentDiffTotal = compMode === 'real' ? realDiffTotal : adjustedDiffTotal;
+  const absDiffTotal = Math.abs(currentDiffTotal);
+
+  const winnerAvg = diffAvg > 0 ? clientA : (diffAvg < 0 ? clientB : t('tie'));
+  const winnerTotal = currentDiffTotal > 0 ? clientA : (currentDiffTotal < 0 ? clientB : t('tie'));
 
   return (
     <div className="space-y-6">
@@ -65,16 +77,42 @@ const HeadToHead = ({ clientA, setClientA, clientB, setClientB, chartDataH2H, st
 
       <div className="bg-blue-50 rounded-2xl border border-blue-200 shadow-sm p-6">
         <h4 className="text-center font-black text-blue-900 mb-4 uppercase tracking-wider text-sm">{t('h2h_diff_exact')}</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-white p-4 rounded-xl shadow-sm border border-blue-100 text-center">
-            <p className="text-xs text-blue-500 font-bold uppercase mb-1">{t('h2h_diff_unit')} {unitPriceLabel} (USD)</p>
-            <p className="text-3xl font-black text-blue-700">{formatUSD(diffAvg)}</p>
-            <p className="text-sm font-semibold text-slate-500 mt-2">{t('h2h_favor')}: <span className="text-blue-600 font-bold uppercase">{winnerAvg}</span></p>
+
+        <div className="flex justify-center mb-6 no-print">
+          <div className="inline-flex bg-white p-1 rounded-xl border border-blue-100 shadow-sm">
+            <button
+              onClick={() => setCompMode('real')}
+              className={`px-4 py-2 text-xs font-bold rounded-lg transition-colors ${compMode === 'real' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-blue-600'}`}
+            >
+              {t('h2h_total_real')}
+            </button>
+            <button
+              onClick={() => setCompMode('adjusted')}
+              className={`px-4 py-2 text-xs font-bold rounded-lg transition-colors ${compMode === 'adjusted' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-blue-600'}`}
+            >
+              {t('h2h_adjusted')}
+            </button>
           </div>
-          <div className="bg-white p-4 rounded-xl shadow-sm border border-blue-100 text-center">
-            <p className="text-xs text-blue-500 font-bold uppercase mb-1">{t('h2h_diff_total')}</p>
-            <p className="text-3xl font-black text-blue-700">{formatUSD(diffTotal)}</p>
-            <p className="text-sm font-semibold text-slate-500 mt-2">{t('h2h_favor')}: <span className="text-blue-600 font-bold uppercase">{winnerTotal}</span></p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-blue-100 text-center flex flex-col justify-center">
+            <p className="text-[10px] md:text-xs text-blue-500 font-bold uppercase mb-2 leading-tight">
+              {t('h2h_diff_unit')} {unitPriceLabel} (USD)
+            </p>
+            <p className="text-3xl md:text-4xl font-black text-blue-700 mb-2">{formatUSD(absDiffAvg)}</p>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+              {t('h2h_favor')}: <span className="text-blue-600 font-black" style={{color: COLORS[winnerAvg]}}>{winnerAvg}</span>
+            </p>
+          </div>
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-blue-100 text-center flex flex-col justify-center">
+            <p className="text-[10px] md:text-xs text-blue-500 font-bold uppercase mb-2 leading-tight">
+              {t('h2h_diff_total')}
+            </p>
+            <p className="text-3xl md:text-4xl font-black text-blue-700 mb-2">{formatUSD(absDiffTotal)}</p>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+              {t('h2h_favor')}: <span className="text-blue-600 font-black" style={{color: COLORS[winnerTotal]}}>{winnerTotal}</span>
+            </p>
           </div>
         </div>
       </div>

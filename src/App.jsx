@@ -387,7 +387,16 @@ export default function App() {
       <PrintStyles />
       <div className="min-h-screen bg-slate-50 p-6 font-sans text-slate-800 relative">
         <div className="max-w-7xl mx-auto space-y-6">
-          <Header onReset={() => setData([])} unitPriceLabel={unitPriceLabel} t={t} lang={lang} setLang={setLang} />
+          <Header
+            onReset={() => setData([])}
+            unitPriceLabel={unitPriceLabel}
+            t={t}
+            lang={lang}
+            setLang={setLang}
+            currentData={filteredData}
+            filters={{ selectedNaves, selectedVariedades, selectedFormatos }}
+            settings={{ displayMode, equivWeightRaw }}
+          />
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <FilterSidebar
