@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Bar } from 'recharts';
 import { Scale } from 'lucide-react';
 import { formatUSD, formatRMB, formatNumber } from '../utils/formatters';
 import { VALID_CLIENTS, COLORS } from '../utils/constants';
 import MultiSelect from './MultiSelect';
+import VisxBarGroup from './charts/VisxBarGroup';
 
 const ComparisonCard = ({ clientA, clientB, statsA, statsB, compMode, t }) => {
   const diffAvg = statsA.avgUSD - statsB.avgUSD;
@@ -164,30 +164,38 @@ const HeadToHead = ({ clientA, setClientA, selectedClientsB, setSelectedClientsB
         </div>
       </div>
 
-      <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200">
-        <h4 className="font-bold text-slate-800 mb-4 text-center text-sm uppercase tracking-wider">{t('h2h_chart')}</h4>
-        <div className="h-[300px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartDataH2H} margin={{ top: 10, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-              <XAxis dataKey="Calibre" axisLine={false} tickLine={false} tick={{fill: '#64748b'}} dy={10} />
-              <YAxis width={60} tickFormatter={(val) => `$${val}`} axisLine={false} tickLine={false} tick={{fill: '#64748b'}} />
-              <Tooltip
-                formatter={(value, name, props) => {
-                  const vars = props.payload._varieties?.[name];
-                  return [formatUSD(value), `${name}${vars ? ` (${vars})` : ''}`];
-                }}
-                cursor={{fill: '#f1f5f9'}}
-                contentStyle={{borderRadius: '8px', border: 'none'}}
-              />
-              <Legend wrapperStyle={{ paddingTop: '10px' }} iconType="circle" />
-              <Bar dataKey={clientA} name={clientA} fill={COLORS[clientA]} radius={[4, 4, 0, 0]} maxBarSize={40} isAnimationActive={false} />
-              {clientsB.map(c => (
-                <Bar key={c} dataKey={c} name={c} fill={COLORS[c]} radius={[4, 4, 0, 0]} maxBarSize={40} isAnimationActive={false} />
-              ))}
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+      <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+        <h4 className="font-bold text-slate-800 mb-6 uppercase tracking-wider text-sm text-center">{t('h2h_chart')}</h4>
+        <VisxBarGroup
+          data={chartDataH2H}
+          keys={[clientA, ...clientsB]}
+          colors={COLORS}
+          valueFormatter={formatUSD}
+          unitLabel={unitPriceLabel}
+          volLabel={unitVolLabel}
+          height={350}
+        />
+      </div>
+
+      <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+        <h4 className="font-bold text-slate-800 mb-6 uppercase tracking-wider text-sm text-center">{t('h2h_vol_chart')}</h4>
+        <VisxBarGroup
+          data={chartDataH2H.map(d => {
+            const row = { ...d };
+            [clientA, ...clientsB].forEach(c => {
+              row[`${c}_vol_val`] = d[`${c}_vol`];
+              row[`_volumes`] = row[`_volumes`] || {};
+              row[`_volumes`][`${c}_vol_val`] = d[c]; // Store price in volume tooltip
+            });
+            return row;
+          })}
+          keys={[clientA, ...clientsB].map(c => `${c}_vol_val`)}
+          colors={Object.keys(COLORS).reduce((acc, k) => ({ ...acc, [`${k}_vol_val`]: COLORS[k] }), {})}
+          valueFormatter={formatNumber}
+          unitLabel={unitVolLabel}
+          volLabel="USD FOB"
+          height={350}
+        />
       </div>
     </div>
   );

@@ -222,44 +222,48 @@ function Dashboard() {
   const chartDataUSD = useMemo(() => {
     const grouped = {};
     filteredData.forEach(d => {
-      if (!grouped[d.Calibre]) grouped[d.Calibre] = { Calibre: d.Calibre, _varieties: {} };
-      if (!grouped[d.Calibre][d.Cliente]) grouped[d.Calibre][d.Cliente] = { sumUSD: 0, sumKilos: 0, varieties: new Set() };
+      if (!grouped[d.Calibre]) grouped[d.Calibre] = { Calibre: d.Calibre, _varieties: {}, _volumes: {} };
+      if (!grouped[d.Calibre][d.Cliente]) grouped[d.Calibre][d.Cliente] = { sumUSD: 0, sumKilos: 0, sumTotalKilos: 0, varieties: new Set() };
       grouped[d.Calibre][d.Cliente].sumUSD += d.USD;
       grouped[d.Calibre][d.Cliente].sumKilos += d.pricedKilos;
+      grouped[d.Calibre][d.Cliente].sumTotalKilos += d.Kilos;
       grouped[d.Calibre][d.Cliente].varieties.add(d.Variedad);
     });
     return Object.values(grouped).map(g => {
-      const res = { Calibre: g.Calibre, _varieties: {} };
+      const res = { Calibre: g.Calibre, _varieties: {}, _volumes: {} };
       VALID_CLIENTS.forEach(client => {
         if (g[client]) {
           res[client] = g[client].sumKilos > 0 ? parseFloat(((g[client].sumUSD / g[client].sumKilos) * priceMultiplier).toFixed(2)) : 0;
+          res._volumes[client] = g[client].sumTotalKilos / volDivider;
           res._varieties[client] = Array.from(g[client].varieties).join(', ');
         }
       });
       return res;
     });
-  }, [filteredData, priceMultiplier]);
+  }, [filteredData, priceMultiplier, volDivider]);
 
   const chartDataRMB = useMemo(() => {
     const grouped = {};
     filteredData.forEach(d => {
-      if (!grouped[d.Calibre]) grouped[d.Calibre] = { Calibre: d.Calibre, _varieties: {} };
-      if (!grouped[d.Calibre][d.Cliente]) grouped[d.Calibre][d.Cliente] = { sumRMB: 0, sumKilos: 0, varieties: new Set() };
+      if (!grouped[d.Calibre]) grouped[d.Calibre] = { Calibre: d.Calibre, _varieties: {}, _volumes: {} };
+      if (!grouped[d.Calibre][d.Cliente]) grouped[d.Calibre][d.Cliente] = { sumRMB: 0, sumKilos: 0, sumTotalKilos: 0, varieties: new Set() };
       grouped[d.Calibre][d.Cliente].sumRMB += d.RMB;
       grouped[d.Calibre][d.Cliente].sumKilos += d.pricedKilos;
+      grouped[d.Calibre][d.Cliente].sumTotalKilos += d.Kilos;
       grouped[d.Calibre][d.Cliente].varieties.add(d.Variedad);
     });
     return Object.values(grouped).map(g => {
-      const res = { Calibre: g.Calibre, _varieties: {} };
+      const res = { Calibre: g.Calibre, _varieties: {}, _volumes: {} };
       VALID_CLIENTS.forEach(client => {
         if (g[client]) {
           res[client] = g[client].sumKilos > 0 ? parseFloat(((g[client].sumRMB / g[client].sumKilos) * priceMultiplier).toFixed(2)) : 0;
+          res._volumes[client] = g[client].sumTotalKilos / volDivider;
           res._varieties[client] = Array.from(g[client].varieties).join(', ');
         }
       });
       return res;
     });
-  }, [filteredData, priceMultiplier]);
+  }, [filteredData, priceMultiplier, volDivider]);
 
   const pieData = useMemo(() => {
     const totals = {};
