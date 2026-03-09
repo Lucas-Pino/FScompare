@@ -2,9 +2,12 @@ import React, { useMemo } from 'react';
 import { Pie } from '@visx/shape';
 import { Group } from '@visx/group';
 import { ParentSize } from '@visx/responsive';
+import { Annotation, Label, Connector } from '@visx/annotation';
+import { scaleOrdinal } from '@visx/scale';
 import { useTooltip, TooltipWithBounds, defaultStyles } from '@visx/tooltip';
 import { localPoint } from '@visx/event';
 import { GradientPinkBlue, GradientSteelPurple, GradientTealBlue } from '@visx/gradient';
+import { LegendOrdinal, LegendItem, LegendLabel } from '@visx/legend';
 import { formatNumber } from '../../utils/formatters';
 import { COLORS } from '../../utils/constants';
 
@@ -48,7 +51,12 @@ export default function VisxPieChart({
           const radius = Math.min(innerWidth, innerHeight) / 2.5;
           const centerY = innerHeight / 2;
           const centerX = innerWidth / 2;
-          const donutThickness = 45;
+          const donutThickness = 70;
+
+          const colorScale = scaleOrdinal({
+            domain: data.map(d => d[nameKey]),
+            range: data.map(d => COLORS[d[nameKey]] || '#94a3b8'),
+          });
 
           return (
             <div className="relative">
@@ -67,8 +75,12 @@ export default function VisxPieChart({
                       return pie.arcs.map((arc, index) => {
                         const { name, varieties, cajas } = arc.data;
                         const [centroidX, centroidY] = pie.path.centroid(arc);
-                        const hasSpaceForLabel = arc.endAngle - arc.startAngle >= 0.15;
                         const arcColor = COLORS[name] || '#94a3b8';
+                        const [labelX, labelY] = pie.path.centroid(arc);
+                        const labelRadius = radius * 1.35;
+                        const labelAngle = (arc.startAngle + arc.endAngle) / 2;
+                        const lx = labelRadius * Math.sin(labelAngle);
+                        const ly = -labelRadius * Math.cos(labelAngle);
 
                         return (
                           <g key={`arc-${name}-${index}`}>
@@ -86,21 +98,25 @@ export default function VisxPieChart({
                               }}
                               onMouseLeave={() => hideTooltip()}
                             />
-                            {hasSpaceForLabel && (
-                              <text
-                                fill="white"
-                                x={centroidX}
-                                y={centroidY}
-                                dy=".33em"
-                                fontSize={10}
-                                fontWeight="bold"
-                                textAnchor="middle"
-                                pointerEvents="none"
-                                className="shadow-sm"
-                              >
-                                {name.substring(0, 5)}...
-                              </text>
-                            )}
+                            <Annotation
+                              x={labelX}
+                              y={labelY}
+                              dx={lx - labelX}
+                              dy={ly - labelY}
+                            >
+                              <Connector stroke={arcColor} strokeWidth={1} type="line" />
+                              <Label
+                                title={name}
+                                titleFontSize={10}
+                                titleFontWeight="bold"
+                                titleFill={arcColor}
+                                backgroundFill="white"
+                                backgroundProps={{ opacity: 0.8 }}
+                                showAnchorLine={false}
+                                horizontalAnchor={lx > 0 ? 'start' : 'end'}
+                                verticalAnchor="middle"
+                              />
+                            </Annotation>
                           </g>
                         );
                       });
@@ -108,6 +124,33 @@ export default function VisxPieChart({
                   </Pie>
                 </Group>
               </svg>
+
+              <div className="flex flex-wrap justify-center gap-4 mt-4 px-6 no-print">
+                <LegendOrdinal scale={colorScale}>
+                  {labels =>
+                    labels.map((label, i) => (
+                      <LegendItem key={`legend-${i}`} margin="0 8px">
+                        <div className="flex items-center">
+                          <div
+                            style={{
+                              width: 10,
+                              height: 10,
+                              borderRadius: '50%',
+                              backgroundColor: label.value,
+                              marginRight: 6,
+                            }}
+                          />
+                          <LegendLabel align="left" margin={0}>
+                            <span className="text-[10px] font-bold text-slate-500 uppercase">
+                              {label.text}
+                            </span>
+                          </LegendLabel>
+                        </div>
+                      </LegendItem>
+                    ))
+                  }
+                </LegendOrdinal>
+              </div>
 
               {tooltipData && (
                 <TooltipWithBounds

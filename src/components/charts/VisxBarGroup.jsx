@@ -8,6 +8,7 @@ import { localPoint } from '@visx/event';
 import { GridRows } from '@visx/grid';
 import { ParentSize } from '@visx/responsive';
 import { LinearGradient } from '@visx/gradient';
+import { LegendOrdinal, LegendItem, LegendLabel } from '@visx/legend';
 import { Download, RotateCcw } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import { Zoom } from '@visx/zoom';
@@ -33,6 +34,10 @@ const VisxBarGroup = ({
   colors,
   xKey = 'Calibre',
   valueFormatter = formatUSD,
+  volumeFormatter = formatNumber,
+  axisFormatter,
+  tooltipPriceLabel = 'Precio',
+  tooltipVolLabel = 'Volumen',
   unitLabel = '',
   volLabel = 'Cajas Eq',
   height = 450
@@ -48,11 +53,25 @@ const VisxBarGroup = ({
 
   const handleDownload = useCallback(async () => {
     if (containerRef.current === null) return;
-    const dataUrl = await toPng(containerRef.current, { cacheBust: true, backgroundColor: '#ffffff' });
-    const link = document.createElement('a');
-    link.download = `chart-${new Date().getTime()}.png`;
-    link.href = dataUrl;
-    link.click();
+
+    // Temporarily hide action buttons
+    const buttons = containerRef.current.querySelector('.chart-actions');
+    if (buttons) buttons.style.display = 'none';
+
+    try {
+      const dataUrl = await toPng(containerRef.current, {
+        cacheBust: true,
+        backgroundColor: '#ffffff'
+      });
+      const link = document.createElement('a');
+      link.download = `chart-${new Date().getTime()}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error('Download failed', err);
+    } finally {
+      if (buttons) buttons.style.display = 'flex';
+    }
   }, []);
 
   return (
@@ -61,18 +80,18 @@ const VisxBarGroup = ({
         {({ width }) => {
           if (width < 10) return null;
 
-          const margin = { top: 40, right: 20, bottom: 60, left: 60 };
+          const margin = { top: 40, right: 20, bottom: 60, left: 70 };
           const xMax = width - margin.left - margin.right;
           const yMax = height - margin.top - margin.bottom;
 
           const xScale = scaleBand({
             domain: data.map(d => d[xKey]),
-            padding: 0.2,
+            padding: 0.3,
           }).rangeRound([0, xMax]);
 
           const xGroupScale = scaleBand({
             domain: keys,
-            padding: 0.15,
+            padding: 0.2,
           }).rangeRound([0, xScale.bandwidth()]);
 
           const colorScale = scaleOrdinal({
@@ -101,7 +120,7 @@ const VisxBarGroup = ({
             >
               {zoom => (
                 <div className="relative">
-                  <div className="absolute right-4 top-2 flex space-x-2 z-20 opacity-0 group-hover/chart:opacity-100 transition-opacity no-print">
+                  <div className="chart-actions absolute right-4 top-2 flex space-x-2 z-20 opacity-0 group-hover/chart:opacity-100 transition-opacity no-print">
                     <button
                       onClick={() => zoom.reset()}
                       className="p-1.5 bg-white/80 backdrop-blur border border-slate-200 rounded-lg text-slate-600 hover:text-blue-600 shadow-sm transition-all"
@@ -212,7 +231,12 @@ const VisxBarGroup = ({
                         scale={yScale}
                         stroke="none"
                         tickStroke="none"
-                        tickFormat={val => valueFormatter(val).split('.')[0]}
+                        tickFormat={axisFormatter || (val => {
+                          if (val === 0) return '0';
+                          if (maxValue >= 1000000) return `${(val / 1000000).toFixed(1)}M`;
+                          if (maxValue >= 10000) return `${(val / 1000).toFixed(0)}k`;
+                          return formatNumber(val);
+                        })}
                         tickLabelProps={{
                           fill: '#94a3b8',
                           fontSize: 10,
@@ -224,6 +248,33 @@ const VisxBarGroup = ({
                       />
                     </Group>
                   </svg>
+
+                  <div className="flex flex-wrap justify-center gap-4 mt-4 px-6 no-print">
+                    <LegendOrdinal scale={colorScale}>
+                      {labels =>
+                        labels.map((label, i) => (
+                          <LegendItem key={`legend-${i}`} margin="0 8px">
+                            <div className="flex items-center">
+                              <div
+                                style={{
+                                  width: 10,
+                                  height: 10,
+                                  borderRadius: '50%',
+                                  backgroundColor: label.value,
+                                  marginRight: 6,
+                                }}
+                              />
+                              <LegendLabel align="left" margin={0}>
+                                <span className="text-[10px] font-bold text-slate-500 uppercase">
+                                  {label.text.replace('_vol_val', '')}
+                                </span>
+                              </LegendLabel>
+                            </div>
+                          </LegendItem>
+                        ))
+                      }
+                    </LegendOrdinal>
+                  </div>
 
                   {tooltipData && (
                     <TooltipWithBounds
@@ -238,12 +289,14 @@ const VisxBarGroup = ({
                           <span className="text-white/60 text-[10px] uppercase font-bold tracking-wider">{tooltipData.calibre}</span>
                         </div>
                         <div className="flex justify-between items-center text-[11px]">
-                          <span className="text-white/70 font-medium">Precio:</span>
+                          <span className="text-white/70 font-medium">{tooltipPriceLabel}:</span>
                           <span className="font-bold text-blue-400">{valueFormatter(tooltipData.value)}{unitLabel && unitLabel.length < 15 && `/${unitLabel}`}</span>
                         </div>
                         <div className="flex justify-between items-center text-[11px]">
-                          <span className="text-white/70 font-medium">Volumen:</span>
-                          <span className="font-bold text-emerald-400">{formatNumber(tooltipData.volume)} {volLabel}</span>
+                          <span className="text-white/70 font-medium">{tooltipVolLabel}:</span>
+                          <span className="font-bold text-emerald-400">
+                            {volumeFormatter(tooltipData.volume)} {volLabel}
+                          </span>
                         </div>
                         {tooltipData.varieties && (
                           <div className="mt-2 pt-1.5 border-t border-white/5 text-[10px] text-white/40 italic leading-tight font-medium">

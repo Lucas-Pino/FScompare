@@ -192,6 +192,9 @@ const HeadToHead = ({ clientA, setClientA, selectedClientsB, setSelectedClientsB
           keys={[clientA, ...clientsB].map(c => `${c}_vol_val`)}
           colors={Object.keys(COLORS).reduce((acc, k) => ({ ...acc, [`${k}_vol_val`]: COLORS[k] }), {})}
           valueFormatter={formatNumber}
+          volumeFormatter={formatUSD}
+          tooltipPriceLabel="Volumen"
+          tooltipVolLabel="Precio"
           unitLabel={unitVolLabel}
           volLabel="USD FOB"
           height={350}
