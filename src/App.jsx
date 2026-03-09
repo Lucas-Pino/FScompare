@@ -296,7 +296,8 @@ function Dashboard() {
 
   const h2hStats = useMemo(() => {
     const dataA = filteredData.filter(d => d.Cliente === clientA);
-    const dataB = filteredData.filter(d => d.Cliente !== clientA && (selectedClientsB.length === 0 || selectedClientsB.includes(d.Cliente)));
+    const clientsB = selectedClientsB.length > 0 ? selectedClientsB : VALID_CLIENTS.filter(c => c !== clientA);
+    const dataB = filteredData.filter(d => clientsB.includes(d.Cliente));
 
     const calc = (arr) => {
       const kilos = arr.reduce((acc, d) => acc + d.Kilos, 0);
@@ -310,34 +311,37 @@ function Dashboard() {
       };
     };
 
+    const statsB = {};
+    clientsB.forEach(c => {
+      statsB[c] = calc(filteredData.filter(d => d.Cliente === c));
+    });
+
     const chartData = {};
     [...dataA, ...dataB].forEach(d => {
       if (!chartData[d.Calibre]) chartData[d.Calibre] = { Calibre: d.Calibre, _varieties: {} };
 
-      const isSideA = d.Cliente === clientA;
-      const key = isSideA ? 'sideA' : 'sideB';
-
-      if (!chartData[d.Calibre][key]) chartData[d.Calibre][key] = { sumUSD: 0, sumKilos: 0, varieties: new Set() };
-      chartData[d.Calibre][key].sumUSD += d.USD;
-      chartData[d.Calibre][key].sumKilos += d.pricedKilos;
-      chartData[d.Calibre][key].varieties.add(d.Variedad);
+      const client = d.Cliente;
+      if (!chartData[d.Calibre][client]) chartData[d.Calibre][client] = { sumUSD: 0, sumKilos: 0, varieties: new Set() };
+      chartData[d.Calibre][client].sumUSD += d.USD;
+      chartData[d.Calibre][client].sumKilos += d.pricedKilos;
+      chartData[d.Calibre][client].varieties.add(d.Variedad);
     });
 
     const chartH2H = Object.values(chartData).map(g => {
       const res = { Calibre: g.Calibre, _varieties: {} };
-      ['sideA', 'sideB'].forEach(key => {
-        if (g[key]) {
-          res[key] = g[key].sumKilos > 0 ? parseFloat(((g[key].sumUSD / g[key].sumKilos) * priceMultiplier).toFixed(2)) : 0;
-          res[`${key}_vol`] = parseFloat((g[key].sumKilos / volDivider).toFixed(1));
-          res._varieties[key] = Array.from(g[key].varieties).join(', ');
+      [clientA, ...clientsB].forEach(client => {
+        if (g[client]) {
+          res[client] = g[client].sumKilos > 0 ? parseFloat(((g[client].sumUSD / g[client].sumKilos) * priceMultiplier).toFixed(2)) : 0;
+          res[`${client}_vol`] = parseFloat((g[client].sumKilos / volDivider).toFixed(1));
+          res._varieties[client] = Array.from(g[client].varieties).join(', ');
         } else {
-          res[key] = 0; res[`${key}_vol`] = 0; res._varieties[key] = '';
+          res[client] = 0; res[`${client}_vol`] = 0; res._varieties[client] = '';
         }
       });
       return res;
     });
 
-    return { statsA: calc(dataA), statsB: calc(dataB), chartH2H };
+    return { statsA: calc(dataA), statsB, chartH2H };
   }, [filteredData, clientA, selectedClientsB, priceMultiplier, volDivider]);
 
   return (
