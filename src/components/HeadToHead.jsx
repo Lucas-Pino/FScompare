@@ -38,13 +38,27 @@ const HeadToHead = ({
     acc.kilos += curr.kilos || 0;
     acc.displayVol += curr.displayVol || 0;
     acc.totalUSD += curr.totalUSD || 0;
-    // We'll calculate averages later
-    acc.totalRMB += (curr.avgRMB * (curr.kilos / 1)) || 0; // approximate back to total
+    // We'll calculate averages later using a weighted sum of RMB
+    acc.totalRMB += (curr.avgRMB * (curr.kilos / 1)) || 0;
     return acc;
   }, { cajas: 0, kilos: 0, displayVol: 0, totalUSD: 0, totalRMB: 0 });
 
-  const avgRMB_B = combinedStatsB.kilos > 0 ? combinedStatsB.totalRMB / combinedStatsB.kilos : 0;
-  const avgUSD_B = combinedStatsB.kilos > 0 ? combinedStatsB.totalUSD / combinedStatsB.kilos : 0;
+  const totalRawRMB_B = Object.values(statsB).reduce((acc, curr) => acc + (curr.totalRMB || 0), 0);
+  const totalRawUSD_B = Object.values(statsB).reduce((acc, curr) => acc + (curr.totalUSD || 0), 0);
+  const totalPricedKilos_B = Object.values(statsB).reduce((acc, curr) => acc + (curr.pricedKilos || 0), 0);
+
+  // Use the ratio from statsA to determine the multiplier (Kilo vs Box Eq)
+  const multiplier = (statsA.totalUSD !== 0 && statsA.pricedKilos !== 0) ? statsA.avgUSD / (statsA.totalUSD / statsA.pricedKilos) : 1;
+
+  const avgRMB_B = totalPricedKilos_B > 0 ? (totalRawRMB_B / totalPricedKilos_B) * multiplier : 0;
+  const avgUSD_B = totalPricedKilos_B > 0 ? (totalRawUSD_B / totalPricedKilos_B) * multiplier : 0;
+
+  // Individual Exercise Results
+  const individualResults = Object.entries(statsB).map(([name, stat]) => {
+    const projUSD = stat.pricedKilos > 0 ? (stat.totalUSD / stat.pricedKilos) * statsA.kilos : 0;
+    const diff = statsA.totalUSD - projUSD;
+    return { name, projUSD, diff };
+  });
 
   const bClients = selectedClientsB.length > 0 ? selectedClientsB : VALID_CLIENTS.filter(c => c !== clientA);
 
@@ -82,7 +96,43 @@ const HeadToHead = ({
           <VsRow label={`${t('vol_exp')} (${unitVolLabel})`} valA={statsA.displayVol} valB={combinedStatsB.displayVol} formatFn={formatNumber} />
           <VsRow label={`${t('tab_rmb')} (RMB/${unitPriceLabel})`} valA={statsA.avgRMB} valB={avgRMB_B} formatFn={formatRMB} />
           <VsRow label={`${t('tab_usd')} (USD/${unitPriceLabel})`} valA={statsA.avgUSD} valB={avgUSD_B} formatFn={formatUSD} />
-          <VsRow label={t('h2h_diff_total')} valA={statsA.totalUSD} valB={combinedStatsB.totalUSD} formatFn={formatUSD} />
+          <VsRow label={t('h2h_total_real')} valA={statsA.totalUSD} valB={combinedStatsB.totalUSD} formatFn={formatUSD} />
+        </div>
+      </div>
+
+      <div className="bg-blue-50 rounded-2xl border border-blue-200 shadow-sm p-6">
+        <h4 className="text-center font-black text-blue-900 mb-6 uppercase tracking-wider text-sm">{t('h2h_results')}</h4>
+
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-blue-100 text-center mb-6">
+          <p className="text-xs text-blue-500 font-bold uppercase mb-1">{t('h2h_total_real')} (USD)</p>
+          <p className="text-3xl font-black text-blue-700">{formatUSD(statsA.totalUSD)}</p>
+          <p className="text-sm font-semibold text-slate-500 mt-2">{clientA}</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {individualResults.map((res, i) => {
+            const pos = res.diff >= 0;
+            return (
+              <div key={i} className="bg-white p-5 rounded-2xl shadow-sm border border-blue-100 relative overflow-hidden group">
+                <div className={`absolute top-0 right-0 w-2 h-full ${pos ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
+                <div className="text-left">
+                  <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">vs {res.name}</p>
+                  <div className="flex justify-between items-end">
+                    <div>
+                      <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">{t('h2h_adjusted')}</p>
+                      <p className="text-xl font-bold text-slate-700">{formatUSD(res.projUSD)}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Diferencia</p>
+                      <p className={`text-2xl font-black ${pos ? 'text-emerald-600' : 'text-red-600'}`}>
+                        {pos ? '+' : ''}{formatUSD(res.diff)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 

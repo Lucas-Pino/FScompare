@@ -309,8 +309,10 @@ function Dashboard() {
       const rmb = arr.reduce((acc, d) => acc + d.RMB, 0);
       const usd = arr.reduce((acc, d) => acc + d.USD, 0);
       return {
-        cajas, kilos,
-        displayVol: kilos / volDivider, totalUSD: usd,
+        cajas, kilos, pricedKilos,
+        totalRMB: rmb,
+        totalUSD: usd,
+        displayVol: kilos / volDivider,
         avgRMB: pricedKilos > 0 ? (rmb / pricedKilos) * priceMultiplier : 0,
         avgUSD: pricedKilos > 0 ? (usd / pricedKilos) * priceMultiplier : 0
       };
@@ -354,7 +356,24 @@ function Dashboard() {
       <PrintStyles />
       <div className="min-h-screen bg-slate-50 p-4 md:p-6 font-sans text-slate-800 relative">
         <div className="max-w-7xl mx-auto space-y-6">
-          <Header onReset={() => setData([])} unitPriceLabel={unitPriceLabel} t={t} lang={lang} setLang={setLang} />
+          <Header
+            onReset={() => setData([])}
+            unitPriceLabel={unitPriceLabel}
+            t={t}
+            lang={lang}
+            setLang={setLang}
+            currentData={filteredData}
+            filters={{
+              naves: selectedNaves,
+              variedades: selectedVariedades,
+              formatos: selectedFormatos
+            }}
+            settings={{
+              displayMode,
+              equivWeight
+            }}
+            showReset={true}
+          />
           {data.length === 0 ? (
             <div className="py-12">
               <UploadScreen onUpload={handleFileUpload} isLoading={isLoading} error={error} t={t} lang={lang} setLang={setLang} hideLanguageToggle={true} />
