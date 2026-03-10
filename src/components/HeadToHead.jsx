@@ -175,7 +175,10 @@ const HeadToHead = ({ clientA, setClientA, selectedClientsB, setSelectedClientsB
               <Tooltip
                 formatter={(value, name, props) => {
                   const vars = props.payload._varieties?.[name];
-                  return [formatUSD(value), `${name}${vars ? ` (${vars})` : ''}`];
+                  const vol = props.payload[`${name}_vol`];
+                  const priceStr = formatUSD(value);
+                  const volStr = vol !== undefined ? `${formatNumber(vol)} ${unitVolLabel}` : '';
+                  return [`${priceStr}${volStr ? ` | ${volStr}` : ''}`, `${name}${vars ? ` (${vars})` : ''}`];
                 }}
                 cursor={{fill: '#f1f5f9'}}
                 contentStyle={{borderRadius: '8px', border: 'none'}}
@@ -184,6 +187,35 @@ const HeadToHead = ({ clientA, setClientA, selectedClientsB, setSelectedClientsB
               <Bar dataKey={clientA} name={clientA} fill={COLORS[clientA]} radius={[4, 4, 0, 0]} maxBarSize={40} isAnimationActive={false} />
               {clientsB.map(c => (
                 <Bar key={c} dataKey={c} name={c} fill={COLORS[c]} radius={[4, 4, 0, 0]} maxBarSize={40} isAnimationActive={false} />
+              ))}
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200">
+        <h4 className="font-bold text-slate-800 mb-4 text-center text-sm uppercase tracking-wider">{t('h2h_vol_chart')}</h4>
+        <div className="h-[300px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={chartDataH2H} margin={{ top: 10, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+              <XAxis dataKey="Calibre" axisLine={false} tickLine={false} tick={{fill: '#64748b'}} dy={10} />
+              <YAxis width={60} tickFormatter={(val) => formatNumber(val)} axisLine={false} tickLine={false} tick={{fill: '#64748b'}} />
+              <Tooltip
+                formatter={(value, name, props) => {
+                  const vars = props.payload._varieties?.[name];
+                  const price = props.payload[name];
+                  const volStr = `${formatNumber(value)} ${unitVolLabel}`;
+                  const priceStr = price !== undefined ? formatUSD(price) : '';
+                  return [`${volStr}${priceStr ? ` | ${priceStr}` : ''}`, `${name}${vars ? ` (${vars})` : ''}`];
+                }}
+                cursor={{fill: '#f1f5f9'}}
+                contentStyle={{borderRadius: '8px', border: 'none'}}
+              />
+              <Legend wrapperStyle={{ paddingTop: '10px' }} iconType="circle" />
+              <Bar dataKey={`${clientA}_vol`} name={clientA} fill={COLORS[clientA]} radius={[4, 4, 0, 0]} maxBarSize={40} isAnimationActive={false} />
+              {clientsB.map(c => (
+                <Bar key={c} dataKey={`${c}_vol`} name={c} fill={COLORS[c]} radius={[4, 4, 0, 0]} maxBarSize={40} isAnimationActive={false} />
               ))}
             </BarChart>
           </ResponsiveContainer>
