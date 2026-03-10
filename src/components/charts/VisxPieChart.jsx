@@ -6,7 +6,7 @@ import { Annotation, Label, Connector } from '@visx/annotation';
 import { scaleOrdinal } from '@visx/scale';
 import { useTooltip, TooltipWithBounds, defaultStyles } from '@visx/tooltip';
 import { localPoint } from '@visx/event';
-import { GradientPinkBlue, GradientSteelPurple, GradientTealBlue } from '@visx/gradient';
+import { GradientPinkBlue } from '@visx/gradient';
 import { LegendOrdinal, LegendItem, LegendLabel } from '@visx/legend';
 import { formatNumber } from '../../utils/formatters';
 import { COLORS } from '../../utils/constants';
@@ -46,12 +46,13 @@ export default function VisxPieChart({
         {({ width }) => {
           if (width < 10) return null;
 
-          const innerWidth = width;
-          const innerHeight = height;
-          const radius = Math.min(innerWidth, innerHeight) / 2.5;
-          const centerY = innerHeight / 2;
-          const centerX = innerWidth / 2;
-          const donutThickness = 70;
+          const margin = { top: 40, right: 80, bottom: 40, left: 80 };
+          const innerWidth = width - margin.left - margin.right;
+          const innerHeight = height - margin.top - margin.bottom;
+          const radius = Math.min(innerWidth, innerHeight) / 2;
+          const centerY = height / 2;
+          const centerX = width / 2;
+          const donutThickness = 60;
 
           const colorScale = scaleOrdinal({
             domain: data.map(d => d[nameKey]),
@@ -73,11 +74,10 @@ export default function VisxPieChart({
                   >
                     {pie => {
                       return pie.arcs.map((arc, index) => {
-                        const { name, varieties, cajas } = arc.data;
+                        const { name } = arc.data;
                         const [centroidX, centroidY] = pie.path.centroid(arc);
                         const arcColor = COLORS[name] || '#94a3b8';
-                        const [labelX, labelY] = pie.path.centroid(arc);
-                        const labelRadius = radius * 1.35;
+                        const labelRadius = radius * 1.25;
                         const labelAngle = (arc.startAngle + arc.endAngle) / 2;
                         const lx = labelRadius * Math.sin(labelAngle);
                         const ly = -labelRadius * Math.cos(labelAngle);
@@ -98,25 +98,27 @@ export default function VisxPieChart({
                               }}
                               onMouseLeave={() => hideTooltip()}
                             />
-                            <Annotation
-                              x={labelX}
-                              y={labelY}
-                              dx={lx - labelX}
-                              dy={ly - labelY}
-                            >
-                              <Connector stroke={arcColor} strokeWidth={1} type="line" />
-                              <Label
-                                title={name}
-                                titleFontSize={10}
-                                titleFontWeight="bold"
-                                titleFill={arcColor}
-                                backgroundFill="white"
-                                backgroundProps={{ opacity: 0.8 }}
-                                showAnchorLine={false}
-                                horizontalAnchor={lx > 0 ? 'start' : 'end'}
-                                verticalAnchor="middle"
-                              />
-                            </Annotation>
+                            {arc.endAngle - arc.startAngle > 0.1 && (
+                              <Annotation
+                                x={centroidX}
+                                y={centroidY}
+                                dx={lx - centroidX}
+                                dy={ly - centroidY}
+                              >
+                                <Connector stroke={arcColor} strokeWidth={1} type="line" />
+                                <Label
+                                  title={name}
+                                  titleFontSize={10}
+                                  titleFontWeight="bold"
+                                  titleFill={arcColor}
+                                  backgroundFill="white"
+                                  backgroundProps={{ opacity: 0.9 }}
+                                  showAnchorLine={false}
+                                  horizontalAnchor={lx > 0 ? 'start' : 'end'}
+                                  verticalAnchor="middle"
+                                />
+                              </Annotation>
+                            )}
                           </g>
                         );
                       });

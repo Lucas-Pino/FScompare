@@ -99,8 +99,12 @@ const VisxBarGroup = ({
             range: keys.map(k => colors[k] || '#94a3b8'),
           });
 
+          // Protect against NaN/Infinity and zero volumes causing huge bars
           const maxValue = Math.max(
-            ...data.map(d => Math.max(...keys.map(k => d[k] || 0))),
+            ...data.map(d => Math.max(...keys.map(k => {
+              const val = d[k];
+              return (typeof val === 'number' && isFinite(val) && val > 0) ? val : 0;
+            }))),
             1
           );
 
@@ -181,35 +185,40 @@ const VisxBarGroup = ({
                           {barGroups =>
                             barGroups.map(barGroup => (
                               <Group key={`bar-group-${barGroup.index}-${barGroup.x0}`} left={barGroup.x0}>
-                                {barGroup.bars.map(bar => (
-                                  <rect
-                                    key={`bar-group-bar-${barGroup.index}-${bar.index}-${bar.value}-${bar.key}`}
-                                    x={bar.x}
-                                    y={bar.y}
-                                    width={bar.width}
-                                    height={bar.height}
-                                    fill={`url(#grad-${bar.key})`}
-                                    rx={4}
-                                    className="transition-all duration-300 hover:brightness-110 cursor-pointer"
-                                    onMouseMove={event => {
-                                      const point = localPoint(event);
-                                      const d = data[barGroup.index];
-                                      const clientName = bar.key.replace('_vol_val', '');
-                                      showTooltip({
-                                        tooltipData: {
-                                          client: clientName,
-                                          value: bar.value,
-                                          volume: d._volumes?.[clientName] || d[`${clientName}_vol`] || 0,
-                                          varieties: d._varieties?.[clientName] || '',
-                                          calibre: d[xKey],
-                                        },
-                                        tooltipLeft: point.x,
-                                        tooltipTop: point.y,
-                                      });
-                                    }}
-                                    onMouseLeave={() => hideTooltip()}
-                                  />
-                                ))}
+                                {barGroup.bars.map(bar => {
+                                    // Don't render bars with invalid or zero values
+                                    if (!bar.value || !isFinite(bar.value) || bar.value <= 0) return null;
+
+                                    return (
+                                        <rect
+                                            key={`bar-group-bar-${barGroup.index}-${bar.index}-${bar.value}-${bar.key}`}
+                                            x={bar.x}
+                                            y={bar.y}
+                                            width={bar.width}
+                                            height={bar.height}
+                                            fill={`url(#grad-${bar.key})`}
+                                            rx={4}
+                                            className="transition-all duration-300 hover:brightness-110 cursor-pointer"
+                                            onMouseMove={event => {
+                                            const point = localPoint(event);
+                                            const d = data[barGroup.index];
+                                            const clientName = bar.key;
+                                            showTooltip({
+                                                tooltipData: {
+                                                client: clientName,
+                                                value: bar.value,
+                                                volume: d._volumes?.[clientName] || d[`${clientName}_vol`] || 0,
+                                                varieties: d._varieties?.[clientName] || '',
+                                                calibre: d[xKey],
+                                                },
+                                                tooltipLeft: point.x,
+                                                tooltipTop: point.y,
+                                            });
+                                            }}
+                                            onMouseLeave={() => hideTooltip()}
+                                        />
+                                    );
+                                })}
                               </Group>
                             ))
                           }
@@ -266,7 +275,7 @@ const VisxBarGroup = ({
                               />
                               <LegendLabel align="left" margin={0}>
                                 <span className="text-[10px] font-bold text-slate-500 uppercase">
-                                  {label.text.replace('_vol_val', '')}
+                                  {label.text}
                                 </span>
                               </LegendLabel>
                             </div>
