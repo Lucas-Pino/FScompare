@@ -13,7 +13,7 @@ const PrintStyles = () => (
       .no-print { display: none !important; }
       .max-w-7xl { max-width: none !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
       .grid { display: block !important; }
-      .lg\:col-span-3 { width: 100% !important; margin: 0 !important; }
+      .lg:col-span-3 { width: 100% !important; margin: 0 !important; }
       .shadow-sm, .shadow-md, .shadow-xl, .shadow-inner { box-shadow: none !important; border: 1px solid #e2e8f0; }
       .bg-slate-50, .bg-blue-50, .bg-amber-50 { background-color: #fff !important; }
       .recharts-wrapper { page-break-inside: avoid; max-width: 100% !important; }

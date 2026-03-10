@@ -5,7 +5,7 @@ import { formatUSD, formatRMB, formatNumber } from '../utils/formatters';
 import { VALID_CLIENTS, COLORS } from '../utils/constants';
 import MultiSelect from './MultiSelect';
 
-const ComparisonCard = ({ clientA, clientB, statsA, statsB, compMode, t }) => {
+const ComparisonCard = ({ clientA, clientB, statsA, statsB, compMode, unitVolLabel, t }) => {
   const diffAvg = statsA.avgUSD - statsB.avgUSD;
   const absDiffAvg = Math.abs(diffAvg);
 
@@ -46,7 +46,7 @@ const ComparisonCard = ({ clientA, clientB, statsA, statsB, compMode, t }) => {
             {t('h2h_favor')}: <span className="font-black" style={{ color }}>{winner}</span>
           </p>
           <p className="text-[9px] text-slate-400 mt-2 font-medium">
-            Vol: {formatNumber(statsB.displayVol)} {t('box_eq')}
+            Vol: {formatNumber(statsB.displayVol)} {unitVolLabel}
           </p>
         </div>
       </div>
@@ -158,6 +158,7 @@ const HeadToHead = ({ clientA, setClientA, selectedClientsB, setSelectedClientsB
               statsA={statsA}
               statsB={statsB[c]}
               compMode={compMode}
+              unitVolLabel={unitVolLabel}
               t={t}
             />
           ))}
@@ -175,13 +176,19 @@ const HeadToHead = ({ clientA, setClientA, selectedClientsB, setSelectedClientsB
               <Tooltip
                 formatter={(value, name, props) => {
                   const vars = props.payload._varieties?.[name];
-                  const vol = props.payload[`${name}_vol`];
+                  const vol = props.payload._volumes?.[name];
                   const priceStr = formatUSD(value);
                   const volStr = vol !== undefined ? `${formatNumber(vol)} ${unitVolLabel}` : '';
-                  return [`${priceStr}${volStr ? ` | ${volStr}` : ''}`, `${name}${vars ? ` (${vars})` : ''}`];
+                  return [
+                    <div key={name}>
+                      <div className="font-black text-slate-800">{priceStr} | <span className="text-blue-600 font-bold">Vol: {volStr}</span></div>
+                      {vars && <div className="text-[10px] text-slate-400 font-medium mt-0.5 leading-tight max-w-[200px]">{vars}</div>}
+                    </div>,
+                    <span className="font-bold text-slate-500">{name}</span>
+                  ];
                 }}
                 cursor={{fill: '#f1f5f9'}}
-                contentStyle={{borderRadius: '8px', border: 'none'}}
+                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
               />
               <Legend wrapperStyle={{ paddingTop: '10px' }} iconType="circle" />
               <Bar dataKey={clientA} name={clientA} fill={COLORS[clientA]} radius={[4, 4, 0, 0]} maxBarSize={40} isAnimationActive={false} />
@@ -207,15 +214,21 @@ const HeadToHead = ({ clientA, setClientA, selectedClientsB, setSelectedClientsB
                   const price = props.payload[name];
                   const volStr = `${formatNumber(value)} ${unitVolLabel}`;
                   const priceStr = price !== undefined ? formatUSD(price) : '';
-                  return [`${volStr}${priceStr ? ` | ${priceStr}` : ''}`, `${name}${vars ? ` (${vars})` : ''}`];
+                  return [
+                    <div key={name}>
+                      <div className="font-black text-slate-800">{volStr} | <span className="text-blue-600 font-bold">FOB: {priceStr}</span></div>
+                      {vars && <div className="text-[10px] text-slate-400 font-medium mt-0.5 leading-tight max-w-[200px]">{vars}</div>}
+                    </div>,
+                    <span className="font-bold text-slate-500">{name}</span>
+                  ];
                 }}
                 cursor={{fill: '#f1f5f9'}}
-                contentStyle={{borderRadius: '8px', border: 'none'}}
+                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
               />
               <Legend wrapperStyle={{ paddingTop: '10px' }} iconType="circle" />
-              <Bar dataKey={`${clientA}_vol`} name={clientA} fill={COLORS[clientA]} radius={[4, 4, 0, 0]} maxBarSize={40} isAnimationActive={false} />
+              <Bar dataKey={(d) => d._volumes?.[clientA]} name={clientA} fill={COLORS[clientA]} radius={[4, 4, 0, 0]} maxBarSize={40} isAnimationActive={false} />
               {clientsB.map(c => (
-                <Bar key={c} dataKey={`${c}_vol`} name={c} fill={COLORS[c]} radius={[4, 4, 0, 0]} maxBarSize={40} isAnimationActive={false} />
+                <Bar key={c} dataKey={(d) => d._volumes?.[c]} name={c} fill={COLORS[c]} radius={[4, 4, 0, 0]} maxBarSize={40} isAnimationActive={false} />
               ))}
             </BarChart>
           </ResponsiveContainer>

@@ -229,16 +229,17 @@ function Dashboard() {
       grouped[d.Calibre][d.Cliente].varieties.add(d.Variedad);
     });
     return Object.values(grouped).map(g => {
-      const res = { Calibre: g.Calibre, _varieties: {} };
+      const res = { Calibre: g.Calibre, _varieties: {}, _volumes: {} };
       VALID_CLIENTS.forEach(client => {
         if (g[client]) {
           res[client] = g[client].sumKilos > 0 ? parseFloat(((g[client].sumUSD / g[client].sumKilos) * priceMultiplier).toFixed(2)) : 0;
+          res._volumes[client] = parseFloat((g[client].sumKilos / volDivider).toFixed(1));
           res._varieties[client] = Array.from(g[client].varieties).join(', ');
         }
       });
       return res;
     });
-  }, [filteredData, priceMultiplier]);
+  }, [filteredData, priceMultiplier, volDivider]);
 
   const chartDataRMB = useMemo(() => {
     const grouped = {};
@@ -250,16 +251,17 @@ function Dashboard() {
       grouped[d.Calibre][d.Cliente].varieties.add(d.Variedad);
     });
     return Object.values(grouped).map(g => {
-      const res = { Calibre: g.Calibre, _varieties: {} };
+      const res = { Calibre: g.Calibre, _varieties: {}, _volumes: {} };
       VALID_CLIENTS.forEach(client => {
         if (g[client]) {
           res[client] = g[client].sumKilos > 0 ? parseFloat(((g[client].sumRMB / g[client].sumKilos) * priceMultiplier).toFixed(2)) : 0;
+          res._volumes[client] = parseFloat((g[client].sumKilos / volDivider).toFixed(1));
           res._varieties[client] = Array.from(g[client].varieties).join(', ');
         }
       });
       return res;
     });
-  }, [filteredData, priceMultiplier]);
+  }, [filteredData, priceMultiplier, volDivider]);
 
   const pieData = useMemo(() => {
     const totals = {};
@@ -328,14 +330,14 @@ function Dashboard() {
     });
 
     const chartH2H = Object.values(chartData).map(g => {
-      const res = { Calibre: g.Calibre, _varieties: {} };
+      const res = { Calibre: g.Calibre, _varieties: {}, _volumes: {} };
       [clientA, ...clientsB].forEach(client => {
         if (g[client]) {
           res[client] = g[client].sumKilos > 0 ? parseFloat(((g[client].sumUSD / g[client].sumKilos) * priceMultiplier).toFixed(2)) : 0;
-          res[`${client}_vol`] = parseFloat((g[client].sumKilos / volDivider).toFixed(1));
+          res._volumes[client] = parseFloat((g[client].sumKilos / volDivider).toFixed(1));
           res._varieties[client] = Array.from(g[client].varieties).join(', ');
         } else {
-          res[client] = 0; res[`${client}_vol`] = 0; res._varieties[client] = '';
+          res[client] = 0; res._volumes[client] = 0; res._varieties[client] = '';
         }
       });
       return res;
@@ -393,8 +395,8 @@ function Dashboard() {
                   <div className="py-20 text-center text-slate-400"><Package className="w-12 h-12 mx-auto mb-3 opacity-50" /><p>{t('no_data')}</p></div>
                 ) : (
                   <div className="w-full mt-4">
-                    {activeTab === 'usd' && <ChartUSD data={chartDataUSD} unitPriceLabel={unitPriceLabel} />}
-                    {activeTab === 'rmb' && <ChartRMB data={chartDataRMB} unitPriceLabel={unitPriceLabel} />}
+                    {activeTab === 'usd' && <ChartUSD data={chartDataUSD} unitPriceLabel={unitPriceLabel} unitVolLabel={unitVolLabel} />}
+                    {activeTab === 'rmb' && <ChartRMB data={chartDataRMB} unitPriceLabel={unitPriceLabel} unitVolLabel={unitVolLabel} />}
                     {activeTab === 'vol' && <ChartVolume data={pieData} unitVolLabel={unitVolLabel} t={t} />}
                     {activeTab === 'h2h' && (
                       <HeadToHead

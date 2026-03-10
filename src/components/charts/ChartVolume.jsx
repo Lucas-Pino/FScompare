@@ -40,9 +40,17 @@ export default function ChartVolume({ data, unitVolLabel, t }) {
                             formatter={(value, name, props) => {
                                 const vars = props.payload.varieties;
                                 const cajas = props.payload.cajas;
-                                return [`${formatNumber(value)} ${unitVolLabel} (${formatNumber(cajas)} Cjs)`, `${name}${vars ? ` (${vars})` : ''}`];
+                                return [
+                                    <div key={name}>
+                                        <div className="font-black text-slate-800">
+                                            {formatNumber(value)} {unitVolLabel} | <span className="text-blue-600 font-bold">{formatNumber(cajas)} Cjs</span>
+                                        </div>
+                                        {vars && <div className="text-[10px] text-slate-400 font-medium mt-0.5 leading-tight max-w-[200px]">{vars}</div>}
+                                    </div>,
+                                    <span className="font-bold text-slate-500">{name}</span>
+                                ];
                             }}
-                            contentStyle={{ borderRadius: '12px' }}
+                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                         />
                     </PieChart>
                 </ResponsiveContainer>
