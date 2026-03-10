@@ -1,4 +1,5 @@
 Nave,Cliente real,Cajas,Total vta,Final USD,Variedad_rot,Calibre_rot,Peso Neto,Contenedor,Productor,Fecha_despacho
 Vessel1,HUASHENG,100,5000,700,Lapins,J,5,CONT1,PROD1,2024-01-01
 Vessel1,YUHUA,100,4500,600,Lapins,J,5,CONT2,PROD2,2024-01-01
-Vessel1,FRUIT MATE,100,6000,800,Lapins,J,5,CONT3,PROD3,2024-01-01
+Vessel1,HUASHENG,200,12000,1600,Lapins,XL,5,CONT3,PROD3,2024-01-01
+Vessel1,YUHUA,200,10000,1400,Lapins,XL,5,CONT4,PROD4,2024-01-01

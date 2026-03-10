@@ -1,9 +1,8 @@
 import React from 'react';
-import { UploadCloud, Globe, RefreshCw, FileSpreadsheet } from 'lucide-react';
+import { UploadCloud, RefreshCw, FileSpreadsheet, Globe } from 'lucide-react';
 
-const UploadScreen = ({ onUpload, isLoading, error, t, lang, setLang, hideLanguageToggle }) => (
-  <div className={`w-full flex flex-col items-center justify-center p-6 font-sans relative ${!hideLanguageToggle ? 'min-h-screen' : ''}`}>
-    {!hideLanguageToggle && (
+const UploadScreen = ({ onUpload, isLoading, error, t, lang, setLang }) => (
+  <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 font-sans relative">
     <div className="absolute top-6 right-6 flex items-center bg-white p-2 rounded-xl shadow-sm border border-slate-100 no-print">
       <Globe className="w-4 h-4 text-slate-400 mr-2" />
       <select
@@ -15,7 +14,6 @@ const UploadScreen = ({ onUpload, isLoading, error, t, lang, setLang, hideLangua
         <option value="en">English</option>
       </select>
     </div>
-    )}
 
     <div className="bg-white p-10 rounded-3xl shadow-xl max-w-lg w-full text-center border border-slate-100">
       <div className="bg-blue-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">

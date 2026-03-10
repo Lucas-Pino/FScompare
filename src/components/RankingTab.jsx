@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Trophy, Medal, AlertCircle } from 'lucide-react';
+import { Medal, Trophy, AlertCircle } from 'lucide-react';
 import { formatUSD, formatRMB, formatNumber, formatPercent } from '../utils/formatters';
 import { COLORS } from '../utils/constants';
 
@@ -48,8 +48,8 @@ const RankingTab = ({ filteredData, marketDict, priceMultiplier, volDivider, uni
 
   return (
     <div className="space-y-6">
-      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm print:border-none print:p-0">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-6 print:mb-2">
+      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-6">
           <h3 className="text-lg font-bold text-slate-800 flex items-center">
             <Medal className="w-5 h-5 mr-2 text-amber-500" /> {t('tab_ranking')}
           </h3>
@@ -72,7 +72,7 @@ const RankingTab = ({ filteredData, marketDict, priceMultiplier, volDivider, uni
         )}
 
         {/* PODIUM */}
-        <div className="flex flex-col md:flex-row justify-center items-end gap-4 mt-12 mb-16 h-48 px-4 print:mt-4 print:mb-8">
+        <div className="flex flex-col md:flex-row justify-center items-end gap-4 mt-12 mb-16 h-48 px-4">
           {/* Segundo Lugar */}
           {top3[1] && (
             <div className="flex-1 max-w-[200px] flex flex-col items-center group relative">
@@ -90,6 +90,7 @@ const RankingTab = ({ filteredData, marketDict, priceMultiplier, volDivider, uni
           )}
 
           {/* Primer Lugar */}
+          {top3[0] && (
           <div className="flex-1 max-w-[220px] flex flex-col items-center group relative">
             <div className="absolute -top-12 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-xs p-2 rounded-lg z-10 whitespace-nowrap">
               FOB: {formatUSD(top3[0].avgUsd)} | Vol: {formatNumber(top3[0].displayVol)}
@@ -104,6 +105,7 @@ const RankingTab = ({ filteredData, marketDict, priceMultiplier, volDivider, uni
               </span>
             </div>
           </div>
+          )}
 
           {/* Tercer Lugar */}
           {top3[2] && (
