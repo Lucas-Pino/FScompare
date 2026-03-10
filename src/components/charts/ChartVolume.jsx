@@ -3,6 +3,33 @@ import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { formatNumber } from '../../utils/formatters';
 import { COLORS } from '../../utils/constants';
 
+const CustomTooltip = ({ active, payload, unitVolLabel }) => {
+    if (active && payload && payload.length) {
+        const entry = payload[0];
+        const { name, value, varieties, cajas } = entry.payload;
+        const fill = entry.payload.fill || entry.color || entry.payload.payload?.fill;
+        return (
+            <div className="bg-white p-4 rounded-2xl shadow-xl border border-slate-100 min-w-[240px]">
+                <div className="flex items-center space-x-2 mb-3 border-b pb-2">
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: fill }}></div>
+                    <span className="font-black text-slate-600 text-xs uppercase tracking-wider">{name}</span>
+                </div>
+                <div className="pl-4">
+                    <div className="font-black text-slate-800 text-xs">
+                        {formatNumber(value)} {unitVolLabel} | <span className="text-blue-600 font-bold">{formatNumber(cajas)} Cjs</span>
+                    </div>
+                    {varieties && (
+                        <div className="text-[10px] text-slate-400 font-medium mt-0.5 leading-tight max-w-[200px]">
+                            {varieties}
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    }
+    return null;
+};
+
 export default function ChartVolume({ data, unitVolLabel, t }) {
     return (
         <div className="flex flex-col md:flex-row h-[450px]">
@@ -36,22 +63,7 @@ export default function ChartVolume({ data, unitVolLabel, t }) {
                         >
                             {data.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[entry.name]} stroke="transparent" />)}
                         </Pie>
-                        <Tooltip
-                            formatter={(value, name, props) => {
-                                const vars = props.payload.varieties;
-                                const cajas = props.payload.cajas;
-                                return [
-                                    <div key={name}>
-                                        <div className="font-black text-slate-800">
-                                            {formatNumber(value)} {unitVolLabel} | <span className="text-blue-600 font-bold">{formatNumber(cajas)} Cjs</span>
-                                        </div>
-                                        {vars && <div className="text-[10px] text-slate-400 font-medium mt-0.5 leading-tight max-w-[200px]">{vars}</div>}
-                                    </div>,
-                                    <span className="font-bold text-slate-500">{name}</span>
-                                ];
-                            }}
-                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                        />
+                        <Tooltip content={<CustomTooltip unitVolLabel={unitVolLabel} />} />
                     </PieChart>
                 </ResponsiveContainer>
             </div>

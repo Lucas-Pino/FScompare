@@ -5,6 +5,61 @@ import { formatUSD, formatRMB, formatNumber } from '../utils/formatters';
 import { VALID_CLIENTS, COLORS } from '../utils/constants';
 import MultiSelect from './MultiSelect';
 
+const H2HTooltip = ({ active, payload, label, unitVolLabel, mode }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white p-4 rounded-2xl shadow-xl border border-slate-100 min-w-[260px]">
+        <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 border-b pb-2">{label}</p>
+        <div className="space-y-3">
+          {payload.map((entry, index) => {
+            const name = entry.name;
+            const entryValue = entry.value;
+            const vars = entry.payload._varieties?.[name];
+            const color = entry.color;
+
+            let priceStr = '';
+            let volStr = '';
+
+            if (mode === 'price') {
+              const vol = entry.payload._volumes?.[name];
+              priceStr = formatUSD(entryValue);
+              volStr = vol !== undefined ? `${formatNumber(vol)} ${unitVolLabel}` : '';
+            } else {
+              const price = entry.payload[name];
+              volStr = `${formatNumber(entryValue)} ${unitVolLabel}`;
+              priceStr = price !== undefined ? formatUSD(price) : '';
+            }
+
+            return (
+              <div key={index} className="flex flex-col">
+                <div className="flex items-center space-x-2 mb-1">
+                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: color }}></div>
+                  <span className="font-bold text-slate-600 text-[10px] uppercase tracking-wider">{name}</span>
+                </div>
+                <div className="pl-4">
+                  <div className="font-black text-slate-800 text-xs">
+                    {mode === 'price' ? (
+                      <>{priceStr} | <span className="text-blue-600">Vol: {volStr}</span></>
+                    ) : (
+                      <>{volStr} | <span className="text-blue-600">FOB: {priceStr}</span></>
+                    )}
+                  </div>
+                  {vars && (
+                    <div className="text-[10px] text-slate-400 font-medium mt-0.5 leading-tight max-w-[220px]">
+                      {vars}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
 const ComparisonCard = ({ clientA, clientB, statsA, statsB, compMode, unitVolLabel, t }) => {
   const diffAvg = statsA.avgUSD - statsB.avgUSD;
   const absDiffAvg = Math.abs(diffAvg);
@@ -54,7 +109,7 @@ const ComparisonCard = ({ clientA, clientB, statsA, statsB, compMode, unitVolLab
   );
 };
 
-const HeadToHead = ({ clientA, setClientA, selectedClientsB, setSelectedClientsB, chartDataH2H, statsA, statsB, unitPriceLabel, unitVolLabel, t }) => {
+const HeadToHead = ({ clientA, setClientA, selectedClientsB, setSelectedClientsB, chartDataH2H, statsA, statsB, unitVolLabel, t }) => {
   const [compMode, setCompMode] = useState('adjusted');
 
   const clientsB = Object.keys(statsB);
@@ -109,14 +164,14 @@ const HeadToHead = ({ clientA, setClientA, selectedClientsB, setSelectedClientsB
               ))}
             </tr>
             <tr>
-              <td className="py-4 font-bold text-slate-500 uppercase text-[10px]">💰 {t('tab_rmb')} (RMB/{unitPriceLabel})</td>
+              <td className="py-4 font-bold text-slate-500 uppercase text-[10px]">💰 {t('tab_rmb')} (RMB)</td>
               <td className="py-4 text-center font-black text-blue-600 text-base">{formatRMB(statsA.avgRMB)}</td>
               {clientsB.map(c => (
                 <td key={c} className="py-4 text-center font-bold text-slate-700">{formatRMB(statsB[c].avgRMB)}</td>
               ))}
             </tr>
             <tr>
-              <td className="py-4 font-bold text-slate-500 uppercase text-[10px]">🚢 {t('tab_usd')} (USD/{unitPriceLabel})</td>
+              <td className="py-4 font-bold text-slate-500 uppercase text-[10px]">🚢 {t('tab_usd')} (USD)</td>
               <td className="py-4 text-center font-black text-blue-600 text-base">{formatUSD(statsA.avgUSD)}</td>
               {clientsB.map(c => (
                 <td key={c} className="py-4 text-center font-bold text-slate-700">{formatUSD(statsB[c].avgUSD)}</td>
@@ -174,21 +229,8 @@ const HeadToHead = ({ clientA, setClientA, selectedClientsB, setSelectedClientsB
               <XAxis dataKey="Calibre" axisLine={false} tickLine={false} tick={{fill: '#64748b'}} dy={10} />
               <YAxis width={60} tickFormatter={(val) => `$${val}`} axisLine={false} tickLine={false} tick={{fill: '#64748b'}} />
               <Tooltip
-                formatter={(value, name, props) => {
-                  const vars = props.payload._varieties?.[name];
-                  const vol = props.payload._volumes?.[name];
-                  const priceStr = formatUSD(value);
-                  const volStr = vol !== undefined ? `${formatNumber(vol)} ${unitVolLabel}` : '';
-                  return [
-                    <div key={name}>
-                      <div className="font-black text-slate-800">{priceStr} | <span className="text-blue-600 font-bold">Vol: {volStr}</span></div>
-                      {vars && <div className="text-[10px] text-slate-400 font-medium mt-0.5 leading-tight max-w-[200px]">{vars}</div>}
-                    </div>,
-                    <span className="font-bold text-slate-500">{name}</span>
-                  ];
-                }}
+                content={<H2HTooltip unitVolLabel={unitVolLabel} mode="price" />}
                 cursor={{fill: '#f1f5f9'}}
-                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
               />
               <Legend wrapperStyle={{ paddingTop: '10px' }} iconType="circle" />
               <Bar dataKey={clientA} name={clientA} fill={COLORS[clientA]} radius={[4, 4, 0, 0]} maxBarSize={40} isAnimationActive={false} />
@@ -209,21 +251,8 @@ const HeadToHead = ({ clientA, setClientA, selectedClientsB, setSelectedClientsB
               <XAxis dataKey="Calibre" axisLine={false} tickLine={false} tick={{fill: '#64748b'}} dy={10} />
               <YAxis width={60} tickFormatter={(val) => formatNumber(val)} axisLine={false} tickLine={false} tick={{fill: '#64748b'}} />
               <Tooltip
-                formatter={(value, name, props) => {
-                  const vars = props.payload._varieties?.[name];
-                  const price = props.payload[name];
-                  const volStr = `${formatNumber(value)} ${unitVolLabel}`;
-                  const priceStr = price !== undefined ? formatUSD(price) : '';
-                  return [
-                    <div key={name}>
-                      <div className="font-black text-slate-800">{volStr} | <span className="text-blue-600 font-bold">FOB: {priceStr}</span></div>
-                      {vars && <div className="text-[10px] text-slate-400 font-medium mt-0.5 leading-tight max-w-[200px]">{vars}</div>}
-                    </div>,
-                    <span className="font-bold text-slate-500">{name}</span>
-                  ];
-                }}
+                content={<H2HTooltip unitVolLabel={unitVolLabel} mode="vol" />}
                 cursor={{fill: '#f1f5f9'}}
-                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
               />
               <Legend wrapperStyle={{ paddingTop: '10px' }} iconType="circle" />
               <Bar dataKey={(d) => d._volumes?.[clientA]} name={clientA} fill={COLORS[clientA]} radius={[4, 4, 0, 0]} maxBarSize={40} isAnimationActive={false} />

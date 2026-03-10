@@ -403,7 +403,7 @@ function Dashboard() {
                         clientA={clientA} setClientA={setClientA}
                         selectedClientsB={selectedClientsB} setSelectedClientsB={setSelectedClientsB}
                         chartDataH2H={h2hStats.chartH2H} statsA={h2hStats.statsA} statsB={h2hStats.statsB}
-                        unitPriceLabel={unitPriceLabel} unitVolLabel={unitVolLabel} t={t}
+                            unitVolLabel={unitVolLabel} t={t}
                       />
                     )}
                   </div>
