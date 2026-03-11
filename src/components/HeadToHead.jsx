@@ -147,7 +147,7 @@ const HeadToHead = ({ clientA, setClientA, selectedClientsB, setSelectedClientsB
         <h4 className="text-center font-bold text-slate-800 mb-6 uppercase tracking-wider text-sm border-b pb-4">{t('h2h_perf')}</h4>
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-slate-400 text-[10px] uppercase tracking-widest border-b border-slate-100">
+            <tr className="text-slate-400 text-xs uppercase tracking-widest border-b border-slate-100">
               <th className="py-4 text-left font-bold">{t('h2h_metric')}</th>
               <th className="py-4 text-center font-black" style={{ color: COLORS[clientA] }}>{clientA}</th>
               {clientsB.map(c => (
@@ -157,21 +157,21 @@ const HeadToHead = ({ clientA, setClientA, selectedClientsB, setSelectedClientsB
           </thead>
           <tbody className="divide-y divide-slate-50">
             <tr>
-              <td className="py-4 font-bold text-slate-500 uppercase text-[10px]">{t('vol_exp')} ({unitVolLabel})</td>
+              <td className="py-4 font-bold text-slate-500 uppercase text-xs">{t('vol_exp')} ({unitVolLabel})</td>
               <td className="py-4 text-center font-black text-blue-600 text-base">{formatNumber(statsA.displayVol)}</td>
               {clientsB.map(c => (
                 <td key={c} className="py-4 text-center font-bold text-slate-700">{formatNumber(statsB[c].displayVol)}</td>
               ))}
             </tr>
             <tr>
-              <td className="py-4 font-bold text-slate-500 uppercase text-[10px]">💰 {t('tab_rmb')} (RMB)</td>
+              <td className="py-4 font-bold text-slate-500 uppercase text-xs">{t('tab_rmb')} (RMB)</td>
               <td className="py-4 text-center font-black text-blue-600 text-base">{formatRMB(statsA.avgRMB)}</td>
               {clientsB.map(c => (
                 <td key={c} className="py-4 text-center font-bold text-slate-700">{formatRMB(statsB[c].avgRMB)}</td>
               ))}
             </tr>
             <tr>
-              <td className="py-4 font-bold text-slate-500 uppercase text-[10px]">🚢 {t('tab_usd')} (USD)</td>
+              <td className="py-4 font-bold text-slate-500 uppercase text-xs">{t('tab_usd')} (USD)</td>
               <td className="py-4 text-center font-black text-blue-600 text-base">{formatUSD(statsA.avgUSD)}</td>
               {clientsB.map(c => (
                 <td key={c} className="py-4 text-center font-bold text-slate-700">{formatUSD(statsB[c].avgUSD)}</td>

@@ -49,14 +49,48 @@ export default function ChartVolume({ data, unitVolLabel, t }) {
                             label={(props) => {
                                 const { x, y, name, varieties, textAnchor, fill, percent } = props;
                                 if (percent < 0.015) return null;
+
+                                const maxLineLength = 22;
+                                const maxLines = 2;
+                                let lines = [];
+                                
+                                if (varieties) {
+                                    const words = varieties.split(', ');
+                                    let currentLine = '';
+
+                                    for (let i = 0; i < words.length; i++) {
+                                        const word = words[i];
+                                        if (currentLine.length + word.length + (currentLine.length > 0 ? 2 : 0) <= maxLineLength) {
+                                            currentLine += (currentLine.length > 0 ? ', ' : '') + word;
+                                        } else {
+                                            if (currentLine.length > 0) {
+                                                lines.push(currentLine);
+                                            }
+                                            currentLine = word;
+                                        }
+                                        
+                                        if (lines.length >= maxLines) break;
+                                    }
+                                    
+                                    if (currentLine.length > 0 && lines.length < maxLines) {
+                                        lines.push(currentLine);
+                                    }
+                                    
+                                    if (lines.length === maxLines && words.length > 0 && lines.join(', ').length < varieties.length) {
+                                         lines[lines.length - 1] += '...';
+                                    }
+                                }
+
                                 return (
                                     <g>
                                         <text x={x} y={y - 8} fill={fill} textAnchor={textAnchor} dominantBaseline="central" fontSize={12} fontWeight="bold">
                                             {name}
                                         </text>
-                                        <text x={x} y={y + 8} fill="#64748b" textAnchor={textAnchor} dominantBaseline="central" fontSize={10}>
-                                            {varieties.length > 35 ? varieties.substring(0, 35) + '...' : varieties}
-                                        </text>
+                                        {lines.map((line, index) => (
+                                            <text key={index} x={x} y={y + 8 + (index * 12)} fill="#64748b" textAnchor={textAnchor} dominantBaseline="central" fontSize={9}>
+                                                {line}
+                                            </text>
+                                        ))}
                                     </g>
                                 );
                             }}
