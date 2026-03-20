@@ -38,7 +38,7 @@ const FilterSidebar = ({
       <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center">
         <Plane className="w-4 h-4 mr-1" /> {t('shipment_type')}
       </label>
-      <div className="flex bg-slate-100 p-1 rounded-lg">
+      <div className="flex bg-slate-100 p-1 rounded-lg gap-1">
         <button
           onClick={() => {
             if (selectedShipmentTypes.includes('sea')) {
