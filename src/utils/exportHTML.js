@@ -5,13 +5,17 @@
  * @param {Object} settings - Display mode and weight settings
  * @param {Function} t - Translation function
  * @param {string} lang - Language code
+ * @param {Array} clients - Dynamic list of clients
+ * @param {Object} colors - Mapping of clients to colors
  */
-export const exportToHTML = (data, filters, settings, t, lang) => {
+export const exportToHTML = (data, filters, settings, t, lang, clients, colors) => {
   // Safety: Ensure we don't break the <script> tags in the generated HTML
   const escapeJSON = (obj) => JSON.stringify(obj).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
 
   const serializedData = escapeJSON(data || []);
   const serializedSettings = escapeJSON(settings || {});
+  const serializedClients = escapeJSON(clients || []);
+  const serializedColors = escapeJSON(colors || {});
 
   const htmlContent = `<!DOCTYPE html>
 <html lang="${lang || 'es'}">
@@ -42,16 +46,8 @@ export const exportToHTML = (data, filters, settings, t, lang) => {
         // Data injected from the exporter
         const rawData = ${serializedData};
         const appSettings = ${serializedSettings};
-
-        const COLORS = {
-          'HUASHENG': '#3b82f6',
-          'YUHUA': '#10b981',
-          'FRUIT MATE': '#f59e0b',
-          'SANGO': '#ef4444',
-          'HATTAT': '#8b5cf6',
-          'PARAMOUNT': '#ec4899',
-          'JOY WING MAU': '#06b6d4'
-        };
+        const clients = ${serializedClients};
+        const COLORS = ${serializedColors};
 
         const formatUSD = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
         const formatRMB = (val) => new Intl.NumberFormat('zh-CN', { style: 'currency', currency: 'CNY' }).format(val);
@@ -74,7 +70,7 @@ export const exportToHTML = (data, filters, settings, t, lang) => {
                 });
                 return Object.values(grouped).map(g => {
                     const res = { Calibre: g.Calibre };
-                    Object.keys(COLORS).forEach(client => {
+                    clients.forEach(client => {
                         if (g[client] && g[client].sumKilos > 0) {
                             res[client + '_usd'] = parseFloat(((g[client].sumUSD / g[client].sumKilos) * priceMultiplier).toFixed(2));
                             res[client + '_rmb'] = parseFloat(((g[client].sumRMB / g[client].sumKilos) * priceMultiplier).toFixed(2));
@@ -131,7 +127,7 @@ export const exportToHTML = (data, filters, settings, t, lang) => {
                                     contentStyle: { borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }
                                 }),
                                 React.createElement(Legend, { wrapperStyle: { paddingTop: '20px' }, iconType: 'circle' }),
-                                Object.keys(COLORS).map(client =>
+                                clients.map(client =>
                                     React.createElement(Bar, {
                                         key: client,
                                         dataKey: client + '_' + activeTab,

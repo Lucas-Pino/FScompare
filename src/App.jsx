@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { Package, ArrowLeft } from 'lucide-react';
-import { VALID_CLIENTS, DICT } from './utils/constants';
+import { PALETTE, DICT } from './utils/constants';
 import { parseNum, parseCSV, parseCost } from './utils/formatters';
 
 import UploadScreen from './components/UploadScreen';
@@ -43,9 +43,10 @@ function Dashboard() {
   const [displayMode, setDisplayMode] = useState('box'); // 'kilo' | 'box'
   const [equivWeightRaw, setEquivWeightRaw] = useState(5);
 
-  const [clientA, setClientA] = useState(VALID_CLIENTS[0]);
-  const [selectedClientsB, setSelectedClientsB] = useState([VALID_CLIENTS[1]]);
-  const [breakdownClient, setBreakdownClient] = useState(VALID_CLIENTS[0]);
+  const [clients, setClients] = useState([]);
+  const [clientA, setClientA] = useState('');
+  const [selectedClientsB, setSelectedClientsB] = useState([]);
+  const [breakdownClient, setBreakdownClient] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -150,11 +151,13 @@ function Dashboard() {
         }
 
         let parsedData = [];
+        let foundClients = new Set();
         rawData.forEach(row => {
           if (!row || row.length === 0) return;
           const client = String(row[idxCliente] || '').trim().toUpperCase();
           const cajas = parseNum(row[idxCajas]);
-          if (VALID_CLIENTS.includes(client) && cajas > 0) {
+          if (client && cajas > 0) {
+            foundClients.add(client);
             const pesoNetoRaw = idxPesoNeto !== -1 ? parseNum(row[idxPesoNeto]) : 5;
             const pesoNeto = pesoNetoRaw > 0 ? pesoNetoRaw : 5;
             const vtaRaw = parseNum(row[idxVta]);
@@ -189,6 +192,7 @@ function Dashboard() {
           setError("No se encontraron datos numéricos.");
           setIsLoading(false); return;
         }
+        setClients(Array.from(foundClients).sort());
         setData(parsedData); setIsLoading(false);
       } catch (err) { setError(err.message); setIsLoading(false); }
     };
@@ -236,7 +240,7 @@ function Dashboard() {
     });
     return Object.values(grouped).map(g => {
       const res = { Calibre: g.Calibre, _varieties: {}, _volumes: {} };
-      VALID_CLIENTS.forEach(client => {
+      clients.forEach(client => {
         if (g[client]) {
           res[client] = g[client].sumKilos > 0 ? parseFloat(((g[client].sumUSD / g[client].sumKilos) * priceMultiplier).toFixed(2)) : 0;
           res._volumes[client] = parseFloat((g[client].sumKilos / volDivider).toFixed(1));
@@ -245,7 +249,7 @@ function Dashboard() {
       });
       return res;
     });
-  }, [filteredData, priceMultiplier, volDivider]);
+  }, [filteredData, priceMultiplier, volDivider, clients]);
 
   const chartDataRMB = useMemo(() => {
     const grouped = {};
@@ -258,7 +262,7 @@ function Dashboard() {
     });
     return Object.values(grouped).map(g => {
       const res = { Calibre: g.Calibre, _varieties: {}, _volumes: {} };
-      VALID_CLIENTS.forEach(client => {
+      clients.forEach(client => {
         if (g[client]) {
           res[client] = g[client].sumKilos > 0 ? parseFloat(((g[client].sumRMB / g[client].sumKilos) * priceMultiplier).toFixed(2)) : 0;
           res._volumes[client] = parseFloat((g[client].sumKilos / volDivider).toFixed(1));
@@ -267,7 +271,25 @@ function Dashboard() {
       });
       return res;
     });
-  }, [filteredData, priceMultiplier, volDivider]);
+  }, [filteredData, priceMultiplier, volDivider, clients]);
+
+  const clientColors = useMemo(() => {
+    const map = {};
+    clients.forEach((c, i) => {
+      map[c] = PALETTE[i % PALETTE.length];
+    });
+    return map;
+  }, [clients]);
+
+  useEffect(() => {
+    if (clients.length > 0) {
+      if (!clientA || !clients.includes(clientA)) setClientA(clients[0]);
+      if (selectedClientsB.length === 0 || (selectedClientsB.length > 0 && !selectedClientsB.every(c => clients.includes(c)))) {
+        setSelectedClientsB(clients.length > 1 ? [clients[1]] : []);
+      }
+      if (!breakdownClient || !clients.includes(breakdownClient)) setBreakdownClient(clients[0]);
+    }
+  }, [clients, clientA, selectedClientsB, breakdownClient]);
 
   const pieData = useMemo(() => {
     const totals = {};
@@ -278,9 +300,10 @@ function Dashboard() {
     });
     return Object.keys(totals).map(k => ({
       name: k, value: totals[k].kilos / volDivider, cajas: totals[k].cajas,
-      varieties: Array.from(totals[k].varieties).join(', ')
+      varieties: Array.from(totals[k].varieties).join(', '),
+      fill: clientColors[k]
     })).sort((a,b) => b.value - a.value);
-  }, [filteredData, volDivider]);
+  }, [filteredData, volDivider, clientColors]);
 
   const { winnerRMB, winnerUSD, totalCajas, totalVol } = useMemo(() => {
     if (filteredData.length === 0) return { winnerRMB: null, winnerUSD: null, totalCajas: 0, totalVol: 0 };
@@ -304,7 +327,7 @@ function Dashboard() {
 
   const h2hStats = useMemo(() => {
     const dataA = filteredData.filter(d => d.Cliente === clientA);
-    const clientsB = selectedClientsB.length > 0 ? selectedClientsB : VALID_CLIENTS.filter(c => c !== clientA);
+    const clientsB = selectedClientsB.length > 0 ? selectedClientsB : clients.filter(c => c !== clientA);
     const dataB = filteredData.filter(d => clientsB.includes(d.Cliente));
 
     const calc = (arr) => {
@@ -350,7 +373,7 @@ function Dashboard() {
     });
 
     return { statsA: calc(dataA), statsB, chartH2H };
-  }, [filteredData, clientA, selectedClientsB, priceMultiplier, volDivider]);
+  }, [filteredData, clientA, selectedClientsB, priceMultiplier, volDivider, clients]);
 
   return (
     <>
@@ -358,10 +381,11 @@ function Dashboard() {
       <div className="min-h-screen bg-slate-50 p-4 md:p-6 font-sans text-slate-800 relative">
         <div className="max-w-7xl mx-auto space-y-6">
           <Header
-            onReset={() => setData([])} unitPriceLabel={unitPriceLabel} t={t} lang={lang} setLang={setLang}
+            onReset={() => { setData([]); setClients([]); }} unitPriceLabel={unitPriceLabel} t={t} lang={lang} setLang={setLang}
             currentData={filteredData} filters={{ selectedNaves, selectedVariedades, selectedFormatos, selectedShipmentTypes }}
             settings={{ displayMode, equivWeightRaw }}
             showReset={data.length > 0}
+            clients={clients} colors={clientColors}
           />
 
           {data.length === 0 ? (
@@ -395,22 +419,23 @@ function Dashboard() {
                   ))}
                 </div>
                 {activeTab === 'ranking' ? (
-                  <RankingTab filteredData={filteredData} marketDict={marketDict} priceMultiplier={priceMultiplier} volDivider={volDivider} unitPriceLabel={unitPriceLabel} unitVolLabel={unitVolLabel} t={t} />
+                  <RankingTab filteredData={filteredData} marketDict={marketDict} priceMultiplier={priceMultiplier} volDivider={volDivider} unitPriceLabel={unitPriceLabel} unitVolLabel={unitVolLabel} t={t} clients={clients} colors={clientColors} />
                 ) : activeTab === 'breakdown' ? (
-                  <BreakdownTab client={breakdownClient} setClient={setBreakdownClient} filteredData={filteredData} marketDict={marketDict} priceMultiplier={priceMultiplier} volDivider={volDivider} unitPriceLabel={unitPriceLabel} unitVolLabel={unitVolLabel} t={t} />
+                  <BreakdownTab client={breakdownClient} setClient={setBreakdownClient} filteredData={filteredData} marketDict={marketDict} priceMultiplier={priceMultiplier} volDivider={volDivider} unitPriceLabel={unitPriceLabel} unitVolLabel={unitVolLabel} t={t} clients={clients} colors={clientColors} />
                 ) : filteredData.length === 0 ? (
                   <div className="py-20 text-center text-slate-400"><Package className="w-12 h-12 mx-auto mb-3 opacity-50" /><p>{t('no_data')}</p></div>
                 ) : (
                   <div className="w-full mt-4">
-                    {activeTab === 'usd' && <ChartUSD data={chartDataUSD} unitPriceLabel={unitPriceLabel} unitVolLabel={unitVolLabel} />}
-                    {activeTab === 'rmb' && <ChartRMB data={chartDataRMB} unitPriceLabel={unitPriceLabel} unitVolLabel={unitVolLabel} />}
-                    {activeTab === 'vol' && <ChartVolume data={pieData} unitVolLabel={unitVolLabel} t={t} />}
+                    {activeTab === 'usd' && <ChartUSD data={chartDataUSD} unitPriceLabel={unitPriceLabel} unitVolLabel={unitVolLabel} clients={clients} colors={clientColors} />}
+                    {activeTab === 'rmb' && <ChartRMB data={chartDataRMB} unitPriceLabel={unitPriceLabel} unitVolLabel={unitVolLabel} clients={clients} colors={clientColors} />}
+                    {activeTab === 'vol' && <ChartVolume data={pieData} unitVolLabel={unitVolLabel} t={t} colors={clientColors} />}
                     {activeTab === 'h2h' && (
                       <HeadToHead
                         clientA={clientA} setClientA={setClientA}
                         selectedClientsB={selectedClientsB} setSelectedClientsB={setSelectedClientsB}
                         chartDataH2H={h2hStats.chartH2H} statsA={h2hStats.statsA} statsB={h2hStats.statsB}
                             unitVolLabel={unitVolLabel} t={t}
+                            clients={clients} colors={clientColors}
                       />
                     )}
                   </div>

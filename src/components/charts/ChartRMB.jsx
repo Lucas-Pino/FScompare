@@ -1,7 +1,6 @@
 import React from 'react';
 import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Bar } from 'recharts';
 import { formatRMB, formatNumber } from '../../utils/formatters';
-import { VALID_CLIENTS, COLORS } from '../../utils/constants';
 
 const CustomTooltip = ({ active, payload, label, unitPriceLabel, unitVolLabel }) => {
     if (active && payload && payload.length) {
@@ -45,7 +44,7 @@ const CustomTooltip = ({ active, payload, label, unitPriceLabel, unitVolLabel })
     return null;
 };
 
-export default function ChartRMB({ data, unitPriceLabel, unitVolLabel }) {
+export default function ChartRMB({ data, unitPriceLabel, unitVolLabel, clients, colors }) {
     return (
         <div className="h-[450px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -58,8 +57,8 @@ export default function ChartRMB({ data, unitPriceLabel, unitVolLabel }) {
                         cursor={{ fill: '#f8fafc' }}
                     />
                     <Legend wrapperStyle={{ paddingTop: '20px' }} iconType="circle" />
-                    {VALID_CLIENTS.map(client => (
-                        <Bar key={client} dataKey={client} fill={COLORS[client]} radius={[4, 4, 0, 0]} maxBarSize={60} isAnimationActive={false} />
+                    {clients.map(client => (
+                        <Bar key={client} dataKey={client} fill={colors[client]} radius={[4, 4, 0, 0]} maxBarSize={60} isAnimationActive={false} />
                     ))}
                 </BarChart>
             </ResponsiveContainer>

@@ -1,14 +1,19 @@
-export const VALID_CLIENTS = ['HUASHENG', 'YUHUA', 'FRUIT MATE', 'SANGO', 'HATTAT', 'PARAMOUNT', 'JOY WING MAU'];
-
-export const COLORS = {
-  'HUASHENG': '#3b82f6',
-  'YUHUA': '#10b981',
-  'FRUIT MATE': '#f59e0b',
-  'SANGO': '#ef4444',
-  'HATTAT': '#8b5cf6',
-  'PARAMOUNT': '#ec4899',
-  'JOY WING MAU': '#06b6d4'
-};
+export const PALETTE = [
+  '#3b82f6', // blue-500
+  '#10b981', // emerald-500
+  '#f59e0b', // amber-500
+  '#ef4444', // red-500
+  '#8b5cf6', // violet-500
+  '#ec4899', // pink-500
+  '#06b6d4', // cyan-500
+  '#f97316', // orange-500
+  '#84cc16', // lime-500
+  '#6366f1', // indigo-500
+  '#a855f7', // purple-500
+  '#d946ef', // fuchsia-500
+  '#14b8a6', // teal-500
+  '#0ea5e9', // sky-500
+];
 
 export const DICT = {
   es: {

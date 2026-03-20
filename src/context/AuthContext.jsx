@@ -8,20 +8,15 @@ const DEFAULT_USERS = [
 ];
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    const saved = localStorage.getItem('pv_current_user');
+    return saved ? JSON.parse(saved) : null;
+  });
   const [users, setUsers] = useState(() => {
     const saved = localStorage.getItem('pv_users');
     return saved ? JSON.parse(saved) : DEFAULT_USERS;
   });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const savedUser = localStorage.getItem('pv_current_user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-    setLoading(false);
-  }, []);
+  const [loading] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('pv_users', JSON.stringify(users));
@@ -31,7 +26,7 @@ export const AuthProvider = ({ children }) => {
     const cleanEmail = email.trim().toLowerCase();
     const foundUser = users.find(u => u.email.toLowerCase() === cleanEmail && u.password === password);
     if (foundUser) {
-      const { password, ...userWithoutPassword } = foundUser;
+      const { password: _unused, ...userWithoutPassword } = foundUser;
       setUser(userWithoutPassword);
       localStorage.setItem('pv_current_user', JSON.stringify(userWithoutPassword));
       return { success: true };
@@ -63,7 +58,7 @@ export const AuthProvider = ({ children }) => {
     }
     setUsers(prevUsers => prevUsers.map(u => u.id === id ? { ...u, ...updatedData, email: cleanEmail } : u));
     if (user && user.id === id) {
-        const { password, ...rest } = { ...user, ...updatedData, email: cleanEmail };
+        const { password: _unused, ...rest } = { ...user, ...updatedData, email: cleanEmail };
         setUser(rest);
         localStorage.setItem('pv_current_user', JSON.stringify(rest));
     }
