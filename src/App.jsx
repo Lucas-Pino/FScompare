@@ -36,6 +36,7 @@ function Dashboard() {
   const [selectedNaves, setSelectedNaves] = useState([]);
   const [selectedVariedades, setSelectedVariedades] = useState([]);
   const [selectedFormatos, setSelectedFormatos] = useState([]);
+  const [selectedShipmentTypes, setSelectedShipmentTypes] = useState(['air', 'sea']);
   const [lang, setLang] = useState('es');
 
   // Settings Mode
@@ -169,6 +170,9 @@ function Dashboard() {
             const vatTotal = idxTTVat !== -1 ? parseNum(row[idxTTVat]) : (idxVat !== -1 ? parseNum(row[idxVat]) * cajas : 0);
             const otrosTotal = idxTTOtros !== -1 ? parseNum(row[idxTTOtros]) : (idxOtros !== -1 ? parseNum(row[idxOtros]) * cajas : 0);
 
+            const container = idxContenedor !== -1 ? String(row[idxContenedor] || 'S/N').trim() : 'S/N';
+            const tipoEnvio = /^\d{3}/.test(container) ? 'air' : 'sea';
+
             parsedData.push({
               Nave: String(row[idxNave] || 'Desconocida').trim(),
               Variedad: String(row[idxVariedad] || 'N/A').trim(),
@@ -176,7 +180,8 @@ function Dashboard() {
               Cliente: client, Cajas: cajas, PesoNeto: pesoNeto, Kilos: cajas * pesoNeto,
               isPriced: isPriced, pricedCajas: isPriced ? cajas : 0, pricedKilos: isPriced ? (cajas * pesoNeto) : 0,
               RMB: vta, USD: usd, Comis: comisTotal, Flete: fleteTotal, Vat: vatTotal, Otros: otrosTotal,
-              Contenedor: idxContenedor !== -1 ? String(row[idxContenedor] || 'S/N').trim() : 'S/N',
+              Contenedor: container,
+              TipoEnvio: tipoEnvio,
               Productor: idxProductor !== -1 ? String(row[idxProductor] || 'N/A').trim() : 'N/A',
               Fecha: idxFecha !== -1 ? String(row[idxFecha] || '').trim().split(' ')[0] : ''
             });
@@ -219,9 +224,10 @@ function Dashboard() {
     return data.filter(d =>
       (selectedNaves.length === 0 || selectedNaves.includes(d.Nave)) &&
       (selectedVariedades.length === 0 || selectedVariedades.includes(d.Variedad)) &&
-      (selectedFormatos.length === 0 || selectedFormatos.includes(String(d.PesoNeto)))
+      (selectedFormatos.length === 0 || selectedFormatos.includes(String(d.PesoNeto))) &&
+      (selectedShipmentTypes.includes(d.TipoEnvio))
     );
-  }, [data, selectedNaves, selectedVariedades, selectedFormatos]);
+  }, [data, selectedNaves, selectedVariedades, selectedFormatos, selectedShipmentTypes]);
 
   const chartDataUSD = useMemo(() => {
     const grouped = {};
@@ -376,7 +382,7 @@ function Dashboard() {
         <div className="max-w-7xl mx-auto space-y-6">
           <Header
             onReset={() => { setData([]); setClients([]); }} unitPriceLabel={unitPriceLabel} t={t} lang={lang} setLang={setLang}
-            currentData={filteredData} filters={{ selectedNaves, selectedVariedades, selectedFormatos }}
+            currentData={filteredData} filters={{ selectedNaves, selectedVariedades, selectedFormatos, selectedShipmentTypes }}
             settings={{ displayMode, equivWeightRaw }}
             showReset={data.length > 0}
             clients={clients} colors={clientColors}
@@ -393,12 +399,13 @@ function Dashboard() {
               selectedNaves={selectedNaves} setSelectedNaves={setSelectedNaves}
               selectedVariedades={selectedVariedades} setSelectedVariedades={setSelectedVariedades}
               selectedFormatos={selectedFormatos} setSelectedFormatos={setSelectedFormatos}
+              selectedShipmentTypes={selectedShipmentTypes} setSelectedShipmentTypes={setSelectedShipmentTypes}
               displayMode={displayMode} setDisplayMode={setDisplayMode}
               equivWeight={equivWeightRaw} setEquivWeight={setEquivWeightRaw}
               totalCajas={totalCajas} totalVol={totalVol} unitVolLabel={unitVolLabel} t={t}
             />
             <div className="lg:col-span-3 space-y-6">
-              <ActiveFiltersBadge naves={selectedNaves} vars={selectedVariedades} formats={selectedFormatos} t={t} />
+              <ActiveFiltersBadge naves={selectedNaves} vars={selectedVariedades} formats={selectedFormatos} shipmentTypes={selectedShipmentTypes} t={t} />
               {activeTab !== 'ranking' && <TopKpis winnerRMB={winnerRMB} winnerUSD={winnerUSD} unitPriceLabel={unitPriceLabel} t={t} />}
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                 <div className="flex space-x-1 bg-slate-100 p-1 rounded-xl mb-6 overflow-x-auto no-print">

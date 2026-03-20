@@ -12,7 +12,7 @@ const UserManagement = () => {
 
   const handleEdit = (user) => {
     setEditingId(user.id);
-    setFormData({ ...user });
+    setFormData({ ...user, password: '' });
     setMessage(null);
   };
 
@@ -30,7 +30,11 @@ const UserManagement = () => {
     e.preventDefault();
     let result;
     if (editingId) {
-      result = updateUser(editingId, formData);
+      const updateData = { ...formData };
+      if (!updateData.password) {
+        delete updateData.password;
+      }
+      result = updateUser(editingId, updateData);
       if (result.success) {
         setEditingId(null);
         setMessage({ type: 'success', text: 'Usuario actualizado correctamente' });
@@ -101,11 +105,11 @@ const UserManagement = () => {
             />
             <input
               type="password"
-              placeholder="Contraseña"
+              placeholder={editingId ? "Nueva contraseña (opcional)" : "Contraseña"}
               className="bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
               value={formData.password}
               onChange={e => setFormData({...formData, password: e.target.value})}
-              required
+              required={!editingId}
             />
             <select
               className="bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"

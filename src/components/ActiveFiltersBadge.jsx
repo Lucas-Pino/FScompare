@@ -1,10 +1,12 @@
 import React from 'react';
-import { Ship, Tag, Box } from 'lucide-react';
+import { Ship, Tag, Box, Plane } from 'lucide-react';
 
-const ActiveFiltersBadge = ({ naves, vars, formats, t }) => {
+const ActiveFiltersBadge = ({ naves, vars, formats, shipmentTypes = ['air', 'sea'], t }) => {
   const nTxt = naves.length === 0 ? t('all') : naves.join(', ');
   const vTxt = vars.length === 0 ? t('all') : vars.join(', ');
   const fTxt = formats.length === 0 ? t('all_f') : formats.map(f => `${f} Kg`).join(', ');
+  const sTxt = shipmentTypes.length === 2 ? t('all_s') : shipmentTypes.length === 0 ? '-' : shipmentTypes.map(s => t(s)).join(', ');
+
   return (
     <div className="bg-white px-4 py-3 rounded-2xl shadow-sm border border-slate-100 flex flex-wrap items-center text-xs text-slate-500 gap-x-4 gap-y-2 print:border-none print:px-0">
       <span className="font-bold text-slate-700 uppercase tracking-wider">{t('applied_filters')}:</span>
@@ -16,6 +18,9 @@ const ActiveFiltersBadge = ({ naves, vars, formats, t }) => {
       </span>
       <span className="flex items-center bg-slate-50 px-2.5 py-1.5 rounded-md border border-slate-200">
         <Box className="w-3.5 h-3.5 mr-1.5 text-amber-500"/> <span className="truncate max-w-[200px] font-semibold">{fTxt}</span>
+      </span>
+      <span className="flex items-center bg-slate-50 px-2.5 py-1.5 rounded-md border border-slate-200">
+        <Plane className="w-3.5 h-3.5 mr-1.5 text-purple-500"/> <span className="truncate max-w-[200px] font-semibold">{sTxt}</span>
       </span>
     </div>
   );
