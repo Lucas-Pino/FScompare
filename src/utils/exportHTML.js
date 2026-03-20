@@ -11,7 +11,6 @@ export const exportToHTML = (data, filters, settings, t, lang) => {
   const escapeJSON = (obj) => JSON.stringify(obj).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
 
   const serializedData = escapeJSON(data || []);
-  const serializedFilters = escapeJSON(filters || {});
   const serializedSettings = escapeJSON(settings || {});
 
   const htmlContent = `<!DOCTYPE html>
