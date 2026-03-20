@@ -28,7 +28,8 @@ export const AuthProvider = ({ children }) => {
   }, [users]);
 
   const login = (email, password) => {
-    const foundUser = users.find(u => u.email === email && u.password === password);
+    const cleanEmail = email.trim().toLowerCase();
+    const foundUser = users.find(u => u.email.toLowerCase() === cleanEmail && u.password === password);
     if (foundUser) {
       const { password, ...userWithoutPassword } = foundUser;
       setUser(userWithoutPassword);
@@ -44,23 +45,25 @@ export const AuthProvider = ({ children }) => {
   };
 
   const addUser = (newUser) => {
-    if (users.some(u => u.email.toLowerCase() === newUser.email.toLowerCase())) {
+    const cleanEmail = newUser.email.trim().toLowerCase();
+    if (users.some(u => u.email.toLowerCase() === cleanEmail)) {
       return { success: false, message: "Ya existe un usuario con este email" };
     }
     setUsers(prevUsers => {
       const id = Math.max(0, ...prevUsers.map(u => u.id)) + 1;
-      return [...prevUsers, { ...newUser, id }];
+      return [...prevUsers, { ...newUser, email: cleanEmail, id }];
     });
     return { success: true };
   };
 
   const updateUser = (id, updatedData) => {
-    if (users.some(u => u.id !== id && u.email.toLowerCase() === updatedData.email.toLowerCase())) {
+    const cleanEmail = updatedData.email.trim().toLowerCase();
+    if (users.some(u => u.id !== id && u.email.toLowerCase() === cleanEmail)) {
       return { success: false, message: "Ya existe otro usuario con este email" };
     }
-    setUsers(users.map(u => u.id === id ? { ...u, ...updatedData } : u));
+    setUsers(prevUsers => prevUsers.map(u => u.id === id ? { ...u, ...updatedData, email: cleanEmail } : u));
     if (user && user.id === id) {
-        const { password, ...rest } = { ...user, ...updatedData };
+        const { password, ...rest } = { ...user, ...updatedData, email: cleanEmail };
         setUser(rest);
         localStorage.setItem('pv_current_user', JSON.stringify(rest));
     }
@@ -70,7 +73,7 @@ export const AuthProvider = ({ children }) => {
   const deleteUser = (id) => {
     if (users.length <= 1) return { success: false, message: "No se puede eliminar el último usuario" };
     if (user && user.id === id) return { success: false, message: "No puedes eliminar tu propio usuario" };
-    setUsers(users.filter(u => u.id !== id));
+    setUsers(prevUsers => prevUsers.filter(u => u.id !== id));
     return { success: true };
   };
 
