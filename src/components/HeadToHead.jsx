@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Bar } from 'recharts';
 import { Scale } from 'lucide-react';
 import { formatUSD, formatRMB, formatNumber } from '../utils/formatters';
-import { VALID_CLIENTS, COLORS } from '../utils/constants';
 import MultiSelect from './MultiSelect';
 
 const H2HTooltip = ({ active, payload, label, unitVolLabel, mode }) => {
@@ -60,7 +59,7 @@ const H2HTooltip = ({ active, payload, label, unitVolLabel, mode }) => {
   return null;
 };
 
-const ComparisonCard = ({ clientA, clientB, statsA, statsB, compMode, unitVolLabel, t }) => {
+const ComparisonCard = ({ clientA, clientB, statsA, statsB, compMode, unitVolLabel, t, colors }) => {
   const diffAvg = statsA.avgUSD - statsB.avgUSD;
   const absDiffAvg = Math.abs(diffAvg);
 
@@ -71,14 +70,14 @@ const ComparisonCard = ({ clientA, clientB, statsA, statsB, compMode, unitVolLab
 
   const isTie = absDiffAvg < 0.0001;
   const winner = isTie ? t('tie') : (diffAvg > 0 ? clientA : clientB);
-  const color = isTie ? '#64748b' : (diffAvg > 0 ? COLORS[clientA] : COLORS[clientB]);
+  const color = isTie ? '#64748b' : (diffAvg > 0 ? colors[clientA] : colors[clientB]);
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
       <div className="bg-slate-50 border-b border-slate-100 p-3 flex justify-center items-center space-x-3">
         <span className="font-bold text-blue-600 text-xs">{clientA}</span>
         <span className="text-slate-400 font-bold text-[10px] tracking-widest uppercase">VS</span>
-        <span className="font-bold text-xs" style={{ color: COLORS[clientB] }}>{clientB}</span>
+        <span className="font-bold text-xs" style={{ color: colors[clientB] }}>{clientB}</span>
       </div>
 
       <div className="p-5 flex-1 flex flex-col justify-center space-y-6">
@@ -109,21 +108,21 @@ const ComparisonCard = ({ clientA, clientB, statsA, statsB, compMode, unitVolLab
   );
 };
 
-const HeadToHead = ({ clientA, setClientA, selectedClientsB, setSelectedClientsB, chartDataH2H, statsA, statsB, unitVolLabel, t }) => {
+const HeadToHead = ({ clientA, setClientA, selectedClientsB, setSelectedClientsB, chartDataH2H, statsA, statsB, unitVolLabel, t, clients, colors }) => {
   const [compMode, setCompMode] = useState('adjusted');
 
   const clientsB = Object.keys(statsB);
-  const colorB = clientsB.length === 1 ? COLORS[clientsB[0]] : '#64748b';
+  const colorB = clientsB.length === 1 ? colors[clientsB[0]] : '#64748b';
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between space-x-4 bg-slate-50 p-4 rounded-2xl border border-slate-200 shadow-inner no-print">
         <div className="flex-1">
           <label className="text-xs font-black text-slate-400 uppercase mb-2 flex items-center">
-            <span className="w-3 h-3 rounded-full mr-2" style={{backgroundColor: COLORS[clientA]}}></span> {t('h2h_principal_a')}
+            <span className="w-3 h-3 rounded-full mr-2" style={{backgroundColor: colors[clientA]}}></span> {t('h2h_principal_a')}
           </label>
           <select value={clientA} onChange={e => setClientA(e.target.value)} className="w-full bg-white border border-slate-200 text-slate-800 text-sm font-bold rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500">
-            {VALID_CLIENTS.map(c => <option key={c} value={c} disabled={selectedClientsB.includes(c)}>{c}</option>)}
+            {clients.map(c => <option key={c} value={c} disabled={selectedClientsB.includes(c)}>{c}</option>)}
           </select>
         </div>
         <div className="flex flex-col items-center justify-center px-4">
@@ -135,7 +134,7 @@ const HeadToHead = ({ clientA, setClientA, selectedClientsB, setSelectedClientsB
             {t('h2h_compare_b')} <span className="w-3 h-3 rounded-full ml-2" style={{backgroundColor: colorB}}></span>
           </label>
           <MultiSelect
-            options={VALID_CLIENTS.filter(c => c !== clientA)}
+            options={clients.filter(c => c !== clientA)}
             selected={selectedClientsB}
             onChange={setSelectedClientsB}
             t={t}
@@ -149,9 +148,9 @@ const HeadToHead = ({ clientA, setClientA, selectedClientsB, setSelectedClientsB
           <thead>
             <tr className="text-slate-400 text-xs uppercase tracking-widest border-b border-slate-100">
               <th className="py-4 text-left font-bold">{t('h2h_metric')}</th>
-              <th className="py-4 text-center font-black" style={{ color: COLORS[clientA] }}>{clientA}</th>
+              <th className="py-4 text-center font-black" style={{ color: colors[clientA] }}>{clientA}</th>
               {clientsB.map(c => (
-                <th key={c} className="py-4 text-center font-black" style={{ color: COLORS[c] }}>{c}</th>
+                <th key={c} className="py-4 text-center font-black" style={{ color: colors[c] }}>{c}</th>
               ))}
             </tr>
           </thead>
@@ -215,6 +214,7 @@ const HeadToHead = ({ clientA, setClientA, selectedClientsB, setSelectedClientsB
               compMode={compMode}
               unitVolLabel={unitVolLabel}
               t={t}
+              colors={colors}
             />
           ))}
         </div>
@@ -233,9 +233,9 @@ const HeadToHead = ({ clientA, setClientA, selectedClientsB, setSelectedClientsB
                 cursor={{fill: '#f1f5f9'}}
               />
               <Legend wrapperStyle={{ paddingTop: '10px' }} iconType="circle" />
-              <Bar dataKey={clientA} name={clientA} fill={COLORS[clientA]} radius={[4, 4, 0, 0]} maxBarSize={40} isAnimationActive={false} />
+              <Bar dataKey={clientA} name={clientA} fill={colors[clientA]} radius={[4, 4, 0, 0]} maxBarSize={40} isAnimationActive={false} />
               {clientsB.map(c => (
-                <Bar key={c} dataKey={c} name={c} fill={COLORS[c]} radius={[4, 4, 0, 0]} maxBarSize={40} isAnimationActive={false} />
+                <Bar key={c} dataKey={c} name={c} fill={colors[c]} radius={[4, 4, 0, 0]} maxBarSize={40} isAnimationActive={false} />
               ))}
             </BarChart>
           </ResponsiveContainer>
@@ -255,9 +255,9 @@ const HeadToHead = ({ clientA, setClientA, selectedClientsB, setSelectedClientsB
                 cursor={{fill: '#f1f5f9'}}
               />
               <Legend wrapperStyle={{ paddingTop: '10px' }} iconType="circle" />
-              <Bar dataKey={(d) => d._volumes?.[clientA]} name={clientA} fill={COLORS[clientA]} radius={[4, 4, 0, 0]} maxBarSize={40} isAnimationActive={false} />
+              <Bar dataKey={(d) => d._volumes?.[clientA]} name={clientA} fill={colors[clientA]} radius={[4, 4, 0, 0]} maxBarSize={40} isAnimationActive={false} />
               {clientsB.map(c => (
-                <Bar key={c} dataKey={(d) => d._volumes?.[c]} name={c} fill={COLORS[c]} radius={[4, 4, 0, 0]} maxBarSize={40} isAnimationActive={false} />
+                <Bar key={c} dataKey={(d) => d._volumes?.[c]} name={c} fill={colors[c]} radius={[4, 4, 0, 0]} maxBarSize={40} isAnimationActive={false} />
               ))}
             </BarChart>
           </ResponsiveContainer>

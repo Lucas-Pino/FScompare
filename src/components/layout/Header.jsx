@@ -4,7 +4,7 @@ import { TrendingUp, RefreshCw, Download, Settings, Share2, User, LogOut, Shield
 import { exportToHTML } from '../../utils/exportHTML';
 import { useAuth } from '../../context/AuthContext';
 
-const Header = ({ onReset, unitPriceLabel, t, lang, setLang, currentData, filters, settings, showReset }) => {
+const Header = ({ onReset, unitPriceLabel, t, lang, setLang, currentData, filters, settings, showReset, clients, colors }) => {
   const [showSettings, setShowSettings] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const { user, logout } = useAuth();
@@ -33,7 +33,7 @@ const Header = ({ onReset, unitPriceLabel, t, lang, setLang, currentData, filter
         </button>
 
         <button
-          onClick={() => exportToHTML(currentData, filters, settings, t, lang)}
+          onClick={() => exportToHTML(currentData, filters, settings, t, lang, clients, colors)}
           title="Exportar Vista Interactiva"
           className="p-2 text-slate-500 hover:text-blue-600 bg-slate-100 hover:bg-blue-50 rounded-lg transition-colors flex items-center"
         >

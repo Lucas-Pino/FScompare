@@ -1,9 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { Trophy, Medal, AlertCircle } from 'lucide-react';
 import { formatUSD, formatRMB, formatNumber, formatPercent } from '../utils/formatters';
-import { COLORS } from '../utils/constants';
 
-const RankingTab = ({ filteredData, marketDict, priceMultiplier, volDivider, unitPriceLabel, unitVolLabel, t }) => {
+const RankingTab = ({ filteredData, marketDict, priceMultiplier, volDivider, unitPriceLabel, unitVolLabel, t, colors }) => {
   const [sortBy, setSortBy] = useState('market');
 
   const rankingData = useMemo(() => {
@@ -81,7 +80,7 @@ const RankingTab = ({ filteredData, marketDict, priceMultiplier, volDivider, uni
               </div>
               <div className="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center mb-2 shadow-inner border-2 border-slate-300 z-10 text-slate-500 font-bold text-xl">2</div>
               <div className="w-full bg-slate-100 rounded-t-lg border-t-4 border-slate-300 pt-4 pb-2 px-2 text-center h-24 flex flex-col justify-start relative shadow-sm">
-                <span className="font-black text-slate-700 truncate w-full text-sm" style={{color: COLORS[top3[1].name]}}>{top3[1].name}</span>
+                <span className="font-black text-slate-700 truncate w-full text-sm" style={{color: colors[top3[1].name]}}>{top3[1].name}</span>
                 <span className="font-bold text-slate-600 mt-1">
                   {sortBy === 'market' ? formatPercent(top3[1].perfPct) : sortBy === 'usd' ? formatUSD(top3[1].avgUsd) : sortBy === 'rmb' ? formatRMB(top3[1].avgRmb) : formatNumber(top3[1].displayVol)}
                 </span>
@@ -98,7 +97,7 @@ const RankingTab = ({ filteredData, marketDict, priceMultiplier, volDivider, uni
               <Trophy className="w-8 h-8" />
             </div>
             <div className="w-full bg-gradient-to-t from-amber-50 to-white rounded-t-lg border-t-4 border-amber-400 pt-4 pb-2 px-2 text-center h-32 flex flex-col justify-start relative shadow-md">
-              <span className="font-black truncate w-full text-base" style={{color: COLORS[top3[0].name]}}>{top3[0].name}</span>
+              <span className="font-black truncate w-full text-base" style={{color: colors[top3[0].name]}}>{top3[0].name}</span>
               <span className="font-black text-amber-600 text-lg mt-1">
                 {sortBy === 'market' ? formatPercent(top3[0].perfPct) : sortBy === 'usd' ? formatUSD(top3[0].avgUsd) : sortBy === 'rmb' ? formatRMB(top3[0].avgRmb) : formatNumber(top3[0].displayVol)}
               </span>
@@ -113,7 +112,7 @@ const RankingTab = ({ filteredData, marketDict, priceMultiplier, volDivider, uni
               </div>
               <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-2 shadow-inner border-2 border-orange-300 z-10 text-orange-700 font-bold text-xl">3</div>
               <div className="w-full bg-slate-50 rounded-t-lg border-t-4 border-orange-300 pt-4 pb-2 px-2 text-center h-20 flex flex-col justify-start relative shadow-sm">
-                <span className="font-black text-slate-700 truncate w-full text-sm" style={{color: COLORS[top3[2].name]}}>{top3[2].name}</span>
+                <span className="font-black text-slate-700 truncate w-full text-sm" style={{color: colors[top3[2].name]}}>{top3[2].name}</span>
                 <span className="font-bold text-slate-600 mt-1">
                   {sortBy === 'market' ? formatPercent(top3[2].perfPct) : sortBy === 'usd' ? formatUSD(top3[2].avgUsd) : sortBy === 'rmb' ? formatRMB(top3[2].avgRmb) : formatNumber(top3[2].displayVol)}
                 </span>
@@ -131,7 +130,7 @@ const RankingTab = ({ filteredData, marketDict, priceMultiplier, volDivider, uni
                 <div key={c.name} className="flex items-center justify-between p-3 hover:bg-slate-50 rounded-lg transition-colors border border-transparent hover:border-slate-100">
                   <div className="flex items-center space-x-4">
                     <span className="text-slate-400 font-bold w-6 text-right">{i + 4}.</span>
-                    <span className="w-3 h-3 rounded-full" style={{backgroundColor: COLORS[c.name]}}></span>
+                    <span className="w-3 h-3 rounded-full" style={{backgroundColor: colors[c.name]}}></span>
                     <span className="font-bold text-slate-700 w-32 truncate">{c.name}</span>
                   </div>
                   <div className="flex flex-1 justify-end space-x-8 text-sm">

@@ -1,9 +1,8 @@
 import React, { useMemo } from 'react';
 import { User, AlertCircle, ArrowUpRight, ArrowDownRight, Box, DollarSign, TrendingUp, TrendingDown, Package, PieChart } from 'lucide-react';
 import { formatUSD, formatRMB, formatNumber, formatPercent } from '../utils/formatters';
-import { VALID_CLIENTS } from '../utils/constants';
 
-const BreakdownTab = ({ client, setClient, filteredData, marketDict, priceMultiplier, volDivider, unitPriceLabel, unitVolLabel, t }) => {
+const BreakdownTab = ({ client, setClient, filteredData, marketDict, priceMultiplier, volDivider, unitPriceLabel, unitVolLabel, t, clients }) => {
   const clientData = useMemo(() => filteredData.filter(d => d.Cliente === client), [filteredData, client]);
 
   const stats = useMemo(() => {
@@ -48,7 +47,7 @@ const BreakdownTab = ({ client, setClient, filteredData, marketDict, priceMultip
         <div className="flex items-center space-x-4 bg-slate-50 p-4 rounded-2xl border border-slate-200">
           <User className="w-5 h-5 text-slate-400" />
           <select value={client} onChange={e => setClient(e.target.value)} className="bg-white border border-slate-300 text-slate-900 font-bold rounded-lg p-2 flex-1">
-            {VALID_CLIENTS.map(c => <option key={c} value={c}>{c}</option>)}
+            {clients.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
         <div className="py-12 text-center text-slate-400"><AlertCircle className="w-12 h-12 mx-auto mb-3 opacity-50" /><p>{t('no_data')}</p></div>
@@ -69,7 +68,7 @@ const BreakdownTab = ({ client, setClient, filteredData, marketDict, priceMultip
           <User className="w-4 h-4 mr-2" /> {t('breakdown_analyze')}
         </label>
         <select value={client} onChange={e => setClient(e.target.value)} className="bg-white border border-slate-300 text-slate-900 font-bold rounded-lg p-3 max-w-xs shadow-sm">
-          {VALID_CLIENTS.map(c => <option key={c} value={c}>{c}</option>)}
+          {clients.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
       </div>
 

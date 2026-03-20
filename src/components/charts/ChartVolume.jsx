@@ -1,7 +1,6 @@
 import React from 'react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { formatNumber } from '../../utils/formatters';
-import { COLORS } from '../../utils/constants';
 
 const CustomTooltip = ({ active, payload, unitVolLabel }) => {
     if (active && payload && payload.length) {
@@ -30,7 +29,7 @@ const CustomTooltip = ({ active, payload, unitVolLabel }) => {
     return null;
 };
 
-export default function ChartVolume({ data, unitVolLabel, t }) {
+export default function ChartVolume({ data, unitVolLabel, t, colors }) {
     return (
         <div className="flex flex-col md:flex-row h-[450px]">
             <div className="flex-[3]">
@@ -95,7 +94,7 @@ export default function ChartVolume({ data, unitVolLabel, t }) {
                                 );
                             }}
                         >
-                            {data.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[entry.name]} stroke="transparent" />)}
+                            {data.map((entry, index) => <Cell key={`cell-${index}`} fill={colors[entry.name]} stroke="transparent" />)}
                         </Pie>
                         <Tooltip content={<CustomTooltip unitVolLabel={unitVolLabel} />} />
                     </PieChart>
@@ -106,7 +105,7 @@ export default function ChartVolume({ data, unitVolLabel, t }) {
                 {data.map(item => (
                     <div key={item.name} className="flex justify-between items-center text-sm p-2 hover:bg-slate-50 rounded-lg transition-colors">
                         <div className="flex items-center">
-                            <span className="w-4 h-4 rounded-full mr-3 shadow-sm" style={{ backgroundColor: COLORS[item.name] }}></span>
+                            <span className="w-4 h-4 rounded-full mr-3 shadow-sm" style={{ backgroundColor: colors[item.name] }}></span>
                             <span className="text-slate-700 font-semibold">{item.name}</span>
                         </div>
                         <span className="font-bold text-slate-900 bg-white px-2 py-1 rounded shadow-sm border border-slate-100">
