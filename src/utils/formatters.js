@@ -3,7 +3,7 @@ export const formatRMB = (val) => new Intl.NumberFormat('zh-CN', { style: 'curre
 export const formatNumber = (val) => new Intl.NumberFormat('es-CL', { maximumFractionDigits: 1 }).format(val);
 export const formatPercent = (val) => new Intl.NumberFormat('en-US', { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(val);
 
-export const parseNum = (val) => {
+export const parseNum = (val, format = 'EU') => {
   if (val === undefined || val === null || val === '') return 0;
   if (typeof val === 'number') return val;
   const str = String(val).trim();
@@ -12,24 +12,24 @@ export const parseNum = (val) => {
   const isNegative = (str.startsWith('(') && str.endsWith(')')) || str.startsWith('-');
   let cleaned = str.replace(/[()\- %]/g, '').trim();
 
-  const commas = (cleaned.match(/,/g) || []).length;
-  const dots = (cleaned.match(/\./g) || []).length;
-
   let num = 0;
-  if (commas === 1 && dots === 0) num = parseFloat(cleaned.replace(',', '.'));
-  else if (dots === 1 && commas === 0) num = parseFloat(cleaned);
-  else if (commas > 0 && dots === 1 && cleaned.indexOf(',') < cleaned.indexOf('.')) num = parseFloat(cleaned.replace(/,/g, ''));
-  else if (dots > 0 && commas === 1 && cleaned.indexOf('.') < cleaned.indexOf(',')) num = parseFloat(cleaned.replace(/\./g, '').replace(',', '.'));
-  else if (commas > 1 && dots === 0) num = parseFloat(cleaned.replace(/,/g, ''));
-  else if (dots > 1 && commas === 0) num = parseFloat(cleaned.replace(/\./g, ''));
-  else num = parseFloat(cleaned.replace(/,/g, ''));
+
+  if (format === 'US') {
+    // US Format: 1,000.00
+    // Remove all commas, keep dots as decimal separator
+    num = parseFloat(cleaned.replace(/,/g, ''));
+  } else {
+    // EU Format: 1.000,00
+    // Remove all dots, replace comma with dot as decimal separator
+    num = parseFloat(cleaned.replace(/\./g, '').replace(/,/g, '.'));
+  }
 
   if (isNaN(num)) return 0;
   return isNegative ? -num : num;
 };
 
-export const parseCost = (val, vta, cajas, type = 'comis') => {
-  const num = parseNum(val);
+export const parseCost = (val, vta, cajas, type = 'comis', format = 'EU') => {
+  const num = parseNum(val, format);
   if (num === 0) return 0;
 
   // Heurística: Distinguir entre Porcentaje, Unitario o Total

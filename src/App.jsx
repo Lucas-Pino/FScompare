@@ -42,6 +42,7 @@ function Dashboard() {
   // Settings Mode
   const [displayMode, setDisplayMode] = useState('box'); // 'kilo' | 'box'
   const [equivWeightRaw, setEquivWeightRaw] = useState(5);
+  const [numFormat, setNumFormat] = useState('EU'); // 'EU' for 1.000,00 or 'US' for 1,000.00
 
   const [clients, setClients] = useState([]);
   const [clientA, setClientA] = useState('');
@@ -155,20 +156,20 @@ function Dashboard() {
         rawData.forEach(row => {
           if (!row || row.length === 0) return;
           const client = String(row[idxCliente] || '').trim().toUpperCase();
-          const cajas = parseNum(row[idxCajas]);
+          const cajas = parseNum(row[idxCajas], numFormat);
           if (client && cajas > 0) {
             foundClients.add(client);
-            const pesoNetoRaw = idxPesoNeto !== -1 ? parseNum(row[idxPesoNeto]) : 5;
+            const pesoNetoRaw = idxPesoNeto !== -1 ? parseNum(row[idxPesoNeto], numFormat) : 5;
             const pesoNeto = pesoNetoRaw > 0 ? pesoNetoRaw : 5;
-            const vtaRaw = parseNum(row[idxVta]);
-            const pVta = idxPVta !== -1 ? parseNum(row[idxPVta]) : 0;
+            const vtaRaw = parseNum(row[idxVta], numFormat);
+            const pVta = idxPVta !== -1 ? parseNum(row[idxPVta], numFormat) : 0;
             const vta = vtaRaw !== 0 ? vtaRaw : (pVta !== 0 ? pVta * cajas : 0);
-            const usd = parseNum(row[idxUSD]);
+            const usd = parseNum(row[idxUSD], numFormat);
             const isPriced = vta !== 0 || usd !== 0;
-            const comisTotal = idxTTComis !== -1 ? parseNum(row[idxTTComis]) : (idxComis !== -1 ? parseCost(row[idxComis], vta, cajas, 'comis') : 0);
-            const fleteTotal = idxTTFlete !== -1 ? parseNum(row[idxTTFlete]) : (idxFlete !== -1 ? parseNum(row[idxFlete]) * cajas : 0);
-            const vatTotal = idxTTVat !== -1 ? parseNum(row[idxTTVat]) : (idxVat !== -1 ? parseNum(row[idxVat]) * cajas : 0);
-            const otrosTotal = idxTTOtros !== -1 ? parseNum(row[idxTTOtros]) : (idxOtros !== -1 ? parseNum(row[idxOtros]) * cajas : 0);
+            const comisTotal = idxTTComis !== -1 ? parseNum(row[idxTTComis], numFormat) : (idxComis !== -1 ? parseCost(row[idxComis], vta, cajas, 'comis', numFormat) : 0);
+            const fleteTotal = idxTTFlete !== -1 ? parseNum(row[idxTTFlete], numFormat) : (idxFlete !== -1 ? parseNum(row[idxFlete], numFormat) * cajas : 0);
+            const vatTotal = idxTTVat !== -1 ? parseNum(row[idxTTVat], numFormat) : (idxVat !== -1 ? parseNum(row[idxVat], numFormat) * cajas : 0);
+            const otrosTotal = idxTTOtros !== -1 ? parseNum(row[idxTTOtros], numFormat) : (idxOtros !== -1 ? parseNum(row[idxOtros], numFormat) * cajas : 0);
 
             const container = idxContenedor !== -1 ? String(row[idxContenedor] || 'S/N').trim() : 'S/N';
             const tipoEnvio = /^\d{3}/.test(container) ? 'air' : 'sea';
@@ -383,14 +384,14 @@ function Dashboard() {
           <Header
             onReset={() => { setData([]); setClients([]); }} unitPriceLabel={unitPriceLabel} t={t} lang={lang} setLang={setLang}
             currentData={filteredData} filters={{ selectedNaves, selectedVariedades, selectedFormatos, selectedShipmentTypes }}
-            settings={{ displayMode, equivWeightRaw }}
+            settings={{ displayMode, equivWeightRaw, numFormat, setNumFormat }}
             showReset={data.length > 0}
             clients={clients} colors={clientColors}
           />
 
           {data.length === 0 ? (
             <div className="py-12">
-              <UploadScreen onUpload={handleFileUpload} isLoading={isLoading} error={error} t={t} lang={lang} setLang={setLang} hideLanguageToggle={true} />
+              <UploadScreen onUpload={handleFileUpload} isLoading={isLoading} error={error} t={t} lang={lang} setLang={setLang} numFormat={numFormat} setNumFormat={setNumFormat} hideLanguageToggle={true} />
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">

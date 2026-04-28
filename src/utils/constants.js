@@ -100,7 +100,10 @@ export const DICT = {
     h2h_metric: "MÉTRICA",
     h2h_adjusted_help: "Calculado usando el volumen del recibidor menor",
     h2h_real_help: "Calculado usando el volumen real del recibidor B",
-    h2h_vs: "vs"
+    h2h_vs: "vs",
+    num_format: "Formato Numérico",
+    format_eu: "EU (1.000,00)",
+    format_us: "US (1,000.00)"
   },
   en: {
     upload_title: "Pura Vida Analytics",
@@ -186,6 +189,9 @@ export const DICT = {
     h2h_metric: "METRIC",
     h2h_adjusted_help: "Calculated using the volume of the smaller receiver",
     h2h_real_help: "Calculated using the real volume of receiver B",
-    h2h_vs: "vs"
+    h2h_vs: "vs",
+    num_format: "Number Format",
+    format_eu: "EU (1.000,00)",
+    format_us: "US (1,000.00)"
   }
 };
