@@ -50,16 +50,38 @@ const Header = ({ onReset, unitPriceLabel, t, lang, setLang, currentData, filter
           </button>
 
           {showSettings && (
-            <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 p-4 z-50">
-              <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">{t('language')}</label>
-              <select
-                value={lang}
-                onChange={e => { setLang(e.target.value); setShowSettings(false); }}
-                className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm font-semibold rounded-lg p-2.5 focus:ring-blue-500 outline-none cursor-pointer"
-              >
-                <option value="es">🇪🇸 Español</option>
-                <option value="en">🇬🇧 English</option>
-              </select>
+            <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-slate-100 p-4 z-50 space-y-4">
+              <div>
+                <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">{t('language')}</label>
+                <select
+                  value={lang}
+                  onChange={e => { setLang(e.target.value); }}
+                  className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm font-semibold rounded-lg p-2.5 focus:ring-blue-500 outline-none cursor-pointer"
+                >
+                  <option value="es">🇪🇸 Español</option>
+                  <option value="en">🇬🇧 English</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-400 uppercase mb-2 block" title="Requiere cargar el archivo nuevamente">
+                  {t('num_format')} *
+                </label>
+                <div className="flex bg-slate-100 p-1 rounded-xl shadow-inner border border-slate-200">
+                  <button
+                    onClick={() => settings.setNumFormat('EU')}
+                    className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-colors ${settings.numFormat === 'EU' ? 'bg-white text-blue-600 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
+                  >
+                    {t('format_eu')}
+                  </button>
+                  <button
+                    onClick={() => settings.setNumFormat('US')}
+                    className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-colors ${settings.numFormat === 'US' ? 'bg-white text-blue-600 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
+                  >
+                    {t('format_us')}
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>
